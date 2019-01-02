@@ -27,18 +27,6 @@ namespace SDRSharp.SatnogsTracker
             //satpc32_ = new SatPC32DDE();
         }
 
-        public  void ReceivedFrequencyInHzChanged(long frequency_in_hz)
-        {
-            if (InvokeRequired)
-            {
-                this.Invoke(new Action<long>(ReceivedFrequencyInHzChanged), new object[] { frequency_in_hz });
-                return;
-            }
-            else
-            {
-                this.labelFrequency.Text = frequency_in_hz.ToString();
-            }
-        }
 
         public void SatPC32ServerReceivedFrequencyInHzChanged(String frequency_in_hz)
         {
@@ -166,7 +154,6 @@ namespace SDRSharp.SatnogsTracker
             else
             {
                 enabled_ = enabled;
-                SetDescriptionOfServerState();
             }
         }
 
@@ -196,7 +183,6 @@ namespace SDRSharp.SatnogsTracker
             else
             {
                 connected_ = connected;
-                SetDescriptionOfServerState();
             }
         }
 
@@ -215,28 +201,7 @@ namespace SDRSharp.SatnogsTracker
             }
         }
 
-        public void SetDescriptionOfServerState()
-        {
-            if (enabled_)
-            {
-                if (connected_)
-                {
-                    this.labelStatus.Text = "connected";
-                    labelStatus.ForeColor = Color.Green;
-                }
-                else
-                {
-                    this.labelStatus.Text = "listening on port 4532";
-                    labelStatus.ForeColor = Color.Blue;
-                }
-            }
-            else
-            {
-                this.labelStatus.Text = "disabled";
-                labelStatus.ForeColor = Color.DarkRed;
-            }
-        }
-
+       
         private void CheckBoxEnable_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox checkbox = sender as CheckBox;
@@ -245,12 +210,10 @@ namespace SDRSharp.SatnogsTracker
                 if (checkbox.Checked)
                 {
                     Console.WriteLine("Checkbox Changed");
-                    //ServerStart?.Invoke();
                     SatPC32ServerStart?.Invoke();
                     
                 } else
                 {
-                    //ServerStop?.Invoke();
                     SatPC32ServerStop?.Invoke();
                     
                 }
