@@ -259,7 +259,7 @@
             this.groupBox1.Controls.Add(this.checkBoxRecordAF);
             this.groupBox1.Location = new System.Drawing.Point(0, 44);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(348, 433);
+            this.groupBox1.Size = new System.Drawing.Size(415, 473);
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             // 
@@ -303,7 +303,7 @@
             this.Margin = new System.Windows.Forms.Padding(6);
             this.MinimumSize = new System.Drawing.Size(370, 106);
             this.Name = "Controlpanel";
-            this.Size = new System.Drawing.Size(370, 531);
+            this.Size = new System.Drawing.Size(432, 531);
             this.Load += new System.EventHandler(this.Controlpanel_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

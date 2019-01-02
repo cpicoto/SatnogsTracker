@@ -19,12 +19,11 @@ namespace SDRSharp.SatnogsTracker
         {
             InitializeComponent();
             this.checkBoxEnable.CheckedChanged += CheckBoxEnable_CheckedChanged;
-            TcpServer_Connected_Changed(false); // init state is disconnected.
-            //SatPC32Server_Connected_Changed(true);
+           //SatPC32Server_Connected_Changed(true);
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             this.labelVersion.Text = "v"+fvi.FileMajorPart+"."+fvi.FileMinorPart;
-            //satpc32_ = new SatPC32DDE();
+
         }
 
 
@@ -131,6 +130,18 @@ namespace SDRSharp.SatnogsTracker
             }
         }
 
+        public void SatPC32ServerRecordAFChanged(Boolean RecordAF)
+        {
+            if (InvokeRequired)
+            {
+                this.Invoke(new Action<Boolean>(SatPC32ServerRecordAFChanged), new object[] { RecordAF });
+                return;
+            }
+            else
+            {
+                this.checkBoxRecordAF.Checked = RecordAF;
+            }
+        }
 
         public void SatPC32ServerSatNogsIDChanged(String SatNogsID)
         {
@@ -173,18 +184,7 @@ namespace SDRSharp.SatnogsTracker
             }
         }
 
-        public void TcpServer_Connected_Changed(bool connected)
-        {
-            if (InvokeRequired)
-            {
-                this.Invoke(new Action<bool>(TcpServer_Connected_Changed), new object[] { connected });
-                return;
-            }
-            else
-            {
-                connected_ = connected;
-            }
-        }
+
 
         public void SatPC32Server_Connected_Changed(bool connected)
         {

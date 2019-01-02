@@ -19,6 +19,7 @@ namespace SDRSharp.SatnogsTracker
         private String _SatModulation;
         private String _SatBandwidth;
         private Boolean _SatRecordBase;
+        private Boolean _SatRecordAF;
         private String _SatNogsID;
         private String _ApplicationName;
         private String _LinkTopic;
@@ -34,6 +35,7 @@ namespace SDRSharp.SatnogsTracker
         public event Action<String> SatModulationChanged;
         public event Action<String> SatBandwidthChanged;
         public event Action<Boolean> SatRecordBaseChanged;
+        public event Action<Boolean> SatRecordAFChanged;
         public event Action<String> SatSatNogsIDChanged;
 
 
@@ -80,6 +82,15 @@ namespace SDRSharp.SatnogsTracker
             }
         }
 
+        public Boolean SatRecordAF
+        {
+            get { return _SatRecordAF; }
+            set
+            {
+                _SatRecordAF = value;
+                SatRecordAFChanged?.Invoke(_SatRecordAF);
+            }
+        }
         public String SatNogsID
         {
             get { return _SatNogsID; }
@@ -154,8 +165,13 @@ namespace SDRSharp.SatnogsTracker
             get { return _SatBandwidth; }
             set
             {
-                _SatBandwidth = value;
-                SatBandwidthChanged?.Invoke(_SatBandwidth);
+                long bw = long.Parse(value);
+                if ((bw > 500) && (bw < 32001))
+                {
+                    _SatBandwidth = value;
+                    SatBandwidthChanged?.Invoke(_SatBandwidth);
+                }
+
             }
         }
 
@@ -168,12 +184,20 @@ namespace SDRSharp.SatnogsTracker
             Console.WriteLine("Creating DDEClient");
             DDEServerApp = "SatPC32";
             ddeclient_ = new NDde.Client.DdeClient(_ApplicationName, _LinkTopic);
+            ddeclient_.Advise += OnAdvise;
+            ddeclient_.Disconnected += OnDisconnected;
         }
 
         public void OnAdvise(Object sender, NDde.Client.DdeAdviseEventArgs e)
         {
             Console.WriteLine("DDE CLient OnAdvise  Got this:{0}", e.Text);
             ParseDde(e.Text);
+        }
+
+        public void OnDisconnected(Object sender, NDde.Client.DdeDisconnectedEventArgs e)
+        {
+            Console.WriteLine("DDE CLient OnDisconnected  Got this:{0}", e.ToString());
+            Connected?.Invoke(false);
         }
         public void ParseDde(string Input)
         {
@@ -242,18 +266,19 @@ namespace SDRSharp.SatnogsTracker
             try
             {
                 ddeclient_.Connect();
+                Console.WriteLine("DDEClient Connected, start Advise");
+                
+                ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
+                //                SatTextBox.Text="[Sat:"+SatName+",EL:"+SatElevation+",AZ:"+SatAzimuth+"], DFreq:"+SatDownLinkFrequency+"]";
+                Enabled.Invoke(true);
+                Connected?.Invoke(true);
             }
             catch (Exception e)
             {
-                Console.WriteLine("{0} Exception caught.", e);
+                Console.WriteLine("{0} Exception caught.", e.Message);
             }
 
-            Console.WriteLine("DDEClient Connected, start Advise");
-            ddeclient_.Advise += OnAdvise;
-            ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
-            //                SatTextBox.Text="[Sat:"+SatName+",EL:"+SatElevation+",AZ:"+SatAzimuth+"], DFreq:"+SatDownLinkFrequency+"]";
-            Enabled.Invoke(true);
-            Connected?.Invoke(true);
+
 
         }
 

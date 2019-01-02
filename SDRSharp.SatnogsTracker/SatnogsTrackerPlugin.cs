@@ -89,6 +89,7 @@ namespace SDRSharp.SatnogsTracker
 
             satpc32Server.SatSatNogsIDChanged += _controlpanel.SatPC32ServerSatNogsIDChanged;
             satpc32Server.SatRecordBaseChanged += _controlpanel.SatPC32ServerRecordBaseChanged;
+            satpc32Server.SatRecordAFChanged += _controlpanel.SatPC32ServerRecordAFChanged;
 
 
 
@@ -98,6 +99,7 @@ namespace SDRSharp.SatnogsTracker
         private void SDRSharp_DownlinkFreqChanged(string Frequency)
         {
             control_.Frequency = long.Parse(Frequency);
+            control_.CenterFrequency = control_.Frequency;
         }
 
         private void SDRSharp_ModuladiontChanged(string Modulation)

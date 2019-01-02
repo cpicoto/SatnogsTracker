@@ -38,14 +38,16 @@
     <Reference Include="NDde, Version=2.1.563.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NDde.2.01.0563\lib\NDde.dll</HintPath>
     </Reference>
-    <Reference Include="SDRSharp.Common">
+    <Reference Include="SDRSharp.Common, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\sdrsharp-x86\SDRSharp.Common.dll</HintPath>
-      <Private>False</Private>
     </Reference>
-    <Reference Include="SDRSharp.PanView">
+    <Reference Include="SDRSharp.PanView, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\sdrsharp-x86\SDRSharp.PanView.dll</HintPath>
     </Reference>
-    <Reference Include="SDRSharp.Radio">
+    <Reference Include="SDRSharp.Radio, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\sdrsharp-x86\SDRSharp.Radio.dll</HintPath>
     </Reference>
     <Reference Include="System" />
