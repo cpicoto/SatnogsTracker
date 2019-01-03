@@ -29,7 +29,7 @@ namespace SDRSharp.SatnogsTracker
         private  SimpleRecorder _audioRecorder;
         private  SimpleRecorder _basebandRecorder;
 
-        private WavSampleFormat _wavSampleFormat;
+        private readonly WavSampleFormat _wavSampleFormat;
         private string _SatElevation;
 
         public void Initialize(ISharpControl control)
@@ -68,6 +68,7 @@ namespace SDRSharp.SatnogsTracker
             //Display Only
             satpc32Server.SatAzimuthChanged += _controlpanel.SatPC32ServerAzimuthChanged;
             satpc32Server.SatElevationChanged += _controlpanel.SatPC32ServerElevationChanged;
+            satpc32Server.SatElevationChanged += SDRSharp_ElevationChanged;
 
             satpc32Server.SatModulationChanged += _controlpanel.SatPC32ServerModulationChanged;
             satpc32Server.SatModulationChanged += SDRSharp_ModuladiontChanged;
@@ -128,7 +129,7 @@ namespace SDRSharp.SatnogsTracker
                 if (_SatElevation != value)
                 {
                     _SatElevation = value;
-                    if (int.Parse(value) <= 0)
+                    if (float.Parse(value) <= 0)
                     {
                         if (_basebandRecorder.IsRecording) StopBaseRecorder();
                         if (_audioRecorder.IsRecording) StopAFRecorder();

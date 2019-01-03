@@ -154,10 +154,6 @@ namespace SDRSharp.SatnogsTracker
 
             }
         }
-        private void StartRecordingChanged()
-        {
-
-        }
         public void SatPC32ServerSatNogsIDChanged(String SatNogsID)
         {
             if (InvokeRequired)

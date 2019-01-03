@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="SatPC32DDE.cs" />
     <Compile Include="Controlpanel.cs">
       <SubType>UserControl</SubType>

@@ -10,7 +10,7 @@ namespace SDRSharp.SatnogsTracker
 
     class SatPC32DDE
     {
-        private NDde.Client.DdeClient ddeclient_;
+        private readonly NDde.Client.DdeClient ddeclient_;
 
         private String _SatName;
         private String _SatDownlinkFreq;
@@ -323,27 +323,8 @@ namespace SDRSharp.SatnogsTracker
         public void Abort()
         {
             Console.WriteLine("Abort DDE Client");
-        }
-        private void CancelComm()
-        {
-            this.Stop();
-            Enabled?.Invoke(false);
-        }
+        }     
 
-
-        private void Connection_established()
-        {
-
-            Connected?.Invoke(true);
-        }
-
-        private void connection_lost()
-        {
-
-            Connected?.Invoke(false);
-        }
-        //Parse the string received from SatPC32 on the DDE Channel
-      
         public event Action<bool> Connected;
         public event Action<bool> Enabled;
 
