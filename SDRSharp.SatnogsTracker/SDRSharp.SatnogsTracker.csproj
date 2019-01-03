@@ -37,18 +37,26 @@
   <ItemGroup>
     <Reference Include="NDde, Version=2.1.563.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NDde.2.01.0563\lib\NDde.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SDRSharp.Common, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\sdrsharp-x86\SDRSharp.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SDRSharp.PanView, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\sdrsharp-x86\SDRSharp.PanView.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="SDRSharp.Radio, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\sdrsharp-x86\SDRSharp.Radio.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SDRSharp.WavRecorder">
+      <HintPath>..\..\..\..\..\..\sdrsharp-x86\SDRSharp.WavRecorder.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -80,7 +88,10 @@
     <Content Include="NDde.xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CHANGELOG.md" />
+    <None Include="LICENSE" />
     <None Include="packages.config" />
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

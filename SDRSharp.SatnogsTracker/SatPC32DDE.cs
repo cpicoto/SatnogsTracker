@@ -77,8 +77,12 @@ namespace SDRSharp.SatnogsTracker
             get { return _SatRecordBase; }
             set
             {
-                _SatRecordBase = value;
-                SatRecordBaseChanged?.Invoke(_SatRecordBase);
+                if (_SatRecordBase != value)
+                {
+                    _SatRecordBase = value;
+                    SatRecordBaseChanged?.Invoke(_SatRecordBase);
+                }
+                
             }
         }
 
@@ -87,8 +91,11 @@ namespace SDRSharp.SatnogsTracker
             get { return _SatRecordAF; }
             set
             {
-                _SatRecordAF = value;
-                SatRecordAFChanged?.Invoke(_SatRecordAF);
+                if (_SatRecordAF != value)
+                {
+                    _SatRecordAF = value;
+                    SatRecordAFChanged?.Invoke(_SatRecordAF);
+                }
             }
         }
         public String SatNogsID
@@ -96,7 +103,8 @@ namespace SDRSharp.SatnogsTracker
             get { return _SatNogsID; }
             set
             {
-                _SatNogsID = value;
+                if (_SatNogsID != value)
+                    _SatNogsID = value;
                 SatSatNogsIDChanged?.Invoke(_SatNogsID);
             }
         }
@@ -108,28 +116,26 @@ namespace SDRSharp.SatnogsTracker
             }
             set
             {
-                _SatName = value;
-                SatNameChanged?.Invoke(_SatName);
+                
+                if (_SatName != value)
+                {
+                    _SatName = value;
+                    SatNameChanged?.Invoke(_SatName);
+                }
+                
             }
         }
 
-        private Thread frequency_set_thread_ = null;
-        public Thread FrequencySetThread
-        {
-            get
-            {
-                return frequency_set_thread_;
-            }
-        }
         public string SatDownlinkFreq
         {
             get { return _SatDownlinkFreq; }
             set
             {
-                _SatDownlinkFreq = value;
-                SatDownlinkFreqChanged?.Invoke(_SatDownlinkFreq);
-                //frequency_set_thread_ = new Thread(() => FrequencyInHzString = f_string);
-                //frequency_set_thread_.Start();
+                if (_SatDownlinkFreq != value)
+                {
+                    _SatDownlinkFreq = value;
+                    SatDownlinkFreqChanged?.Invoke(_SatDownlinkFreq);
+                }
             }
         }
         public string SatAzimuth
@@ -138,8 +144,11 @@ namespace SDRSharp.SatnogsTracker
 
             set
             {
-                _SatAzimuth = value;
-                SatAzimuthChanged?.Invoke(_SatAzimuth);
+                if (_SatAzimuth != value)
+                {
+                    _SatAzimuth = value;
+                    SatAzimuthChanged?.Invoke(_SatAzimuth);
+                }
             }
         }
         public string SatElevation
@@ -147,8 +156,11 @@ namespace SDRSharp.SatnogsTracker
             get { return _SatElevation; }
             set
             {
-                _SatElevation = value;
-                SatElevationChanged?.Invoke(_SatElevation);
+                if (_SatElevation != value)
+                {
+                    _SatElevation = value;
+                    SatElevationChanged?.Invoke(_SatElevation);
+                }
             }
         }
         public string SatModulation
@@ -156,8 +168,11 @@ namespace SDRSharp.SatnogsTracker
             get { return _SatModulation; }
             set
             {
-                _SatModulation = value;
-                SatModulationChanged?.Invoke(_SatModulation);
+                if (_SatModulation != value)
+                {
+                    _SatModulation = value;
+                    SatModulationChanged?.Invoke(_SatModulation);
+                }
             }
         }
         public string SatBandwidth
@@ -165,11 +180,14 @@ namespace SDRSharp.SatnogsTracker
             get { return _SatBandwidth; }
             set
             {
-                long bw = long.Parse(value);
-                if ((bw > 500) && (bw < 32001))
+                if (_SatBandwidth != value)
                 {
-                    _SatBandwidth = value;
-                    SatBandwidthChanged?.Invoke(_SatBandwidth);
+                    long bw = long.Parse(value);
+                    if ((bw > 500) && (bw < 32001))
+                    {
+                        _SatBandwidth = value;
+                        SatBandwidthChanged?.Invoke(_SatBandwidth);
+                    }
                 }
 
             }
@@ -229,6 +247,10 @@ namespace SDRSharp.SatnogsTracker
                 {
                     SatBandwidth = word.Substring(2, word.Length - 2);
                 }
+                else if (word.StartsWith("ID"))
+                {
+                    SatNogsID = word.Substring(2, word.Length - 2);
+                }
                 else if (word.StartsWith("RB"))
                 {
                     if (word.Substring(2, word.Length - 2).ToLower().StartsWith("yes"))
@@ -236,9 +258,12 @@ namespace SDRSharp.SatnogsTracker
                     else
                         SatRecordBase = false;
                 }
-                else if (word.StartsWith("ID"))
+                else if (word.StartsWith("RA"))
                 {
-                    SatNogsID = word.Substring(2, word.Length - 2);
+                    if (word.Substring(2, word.Length - 2).ToLower().StartsWith("yes"))
+                        SatRecordAF = true;
+                    else
+                        SatRecordAF = false;
                 }
                 else if (word.StartsWith("MA"))
                 {

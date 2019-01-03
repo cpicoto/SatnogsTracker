@@ -1,28 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 
+using SDRSharp.Common;
+
 namespace SDRSharp.SatnogsTracker
 {
+    
     public partial class Controlpanel : UserControl
     {
-        
+
+
+
+   
+
+
+
+
+
 
         public Controlpanel()
         {
             InitializeComponent();
+
             this.checkBoxEnable.CheckedChanged += CheckBoxEnable_CheckedChanged;
            //SatPC32Server_Connected_Changed(true);
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             this.labelVersion.Text = "v"+fvi.FileMajorPart+"."+fvi.FileMinorPart;
+
+
+           
+ 
 
         }
 
@@ -127,10 +136,11 @@ namespace SDRSharp.SatnogsTracker
             else
             {
                 this.checkBoxRecordBase.Checked = RecordBase;
+
             }
         }
 
-        public void SatPC32ServerRecordAFChanged(Boolean RecordAF)
+                public void SatPC32ServerRecordAFChanged(Boolean RecordAF)
         {
             if (InvokeRequired)
             {
@@ -140,9 +150,14 @@ namespace SDRSharp.SatnogsTracker
             else
             {
                 this.checkBoxRecordAF.Checked = RecordAF;
+ 
+
             }
         }
+        private void StartRecordingChanged()
+        {
 
+        }
         public void SatPC32ServerSatNogsIDChanged(String SatNogsID)
         {
             if (InvokeRequired)
@@ -153,18 +168,6 @@ namespace SDRSharp.SatnogsTracker
             else
             {
                 this.labelSatNogsID.Text = SatNogsID;
-            }
-        }
-        public void TcpServer_Enabled_Changed(bool enabled)
-        {
-            if (InvokeRequired)
-            {
-                this.Invoke(new Action<bool>(TcpServer_Enabled_Changed), new object[] { enabled });
-                return;
-            }
-            else
-            {
-                enabled_ = enabled;
             }
         }
 
@@ -183,8 +186,6 @@ namespace SDRSharp.SatnogsTracker
                 //SetDescriptionOfServerState();
             }
         }
-
-
 
         public void SatPC32Server_Connected_Changed(bool connected)
         {
@@ -215,6 +216,7 @@ namespace SDRSharp.SatnogsTracker
                 } else
                 {
                     SatPC32ServerStop?.Invoke();
+
                     
                 }
             }
