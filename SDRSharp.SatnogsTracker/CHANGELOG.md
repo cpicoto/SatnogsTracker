@@ -1,4 +1,7 @@
 # SDRSharp.SatnogsTracker Changelog
+## v1.2
+*Fixed Exit and Disconnect
+*Stop Recordings if SatElevation reaches 0
 ## v1.1
 *Added IQ and AF Recording 
 *DDE String parses the following fields from tracking software

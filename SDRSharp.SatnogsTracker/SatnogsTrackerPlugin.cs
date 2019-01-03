@@ -30,8 +30,7 @@ namespace SDRSharp.SatnogsTracker
         private  SimpleRecorder _basebandRecorder;
 
         private WavSampleFormat _wavSampleFormat;
-
-
+        private string _SatElevation;
 
         public void Initialize(ISharpControl control)
         {
@@ -85,8 +84,6 @@ namespace SDRSharp.SatnogsTracker
             satpc32Server.SatRecordAFChanged += _controlpanel.SatPC32ServerRecordAFChanged;
             satpc32Server.SatRecordAFChanged += SDRSharp_AFRecorderChanged;
 
-
-
         }
 
         public UserControl GuiControl
@@ -111,9 +108,9 @@ namespace SDRSharp.SatnogsTracker
 
         public void Close()
         {
-            satpc32Server_?.Stop();
             StopBaseRecorder();
             StopAFRecorder();
+            satpc32Server_?.Abort();
         }
 
         public bool HasGui
@@ -123,6 +120,22 @@ namespace SDRSharp.SatnogsTracker
 
         public string SatelliteName { get; private set; }
         public string SatelliteID { get; private set; }
+        public string SatElevation
+        {
+            get { return _SatElevation; }
+            set
+            {
+                if (_SatElevation != value)
+                {
+                    _SatElevation = value;
+                    if (int.Parse(value) <= 0)
+                    {
+                        if (_basebandRecorder.IsRecording) StopBaseRecorder();
+                        if (_audioRecorder.IsRecording) StopAFRecorder();
+                    }
+                }
+            }
+        }
 
         private void SDRSharp_DownlinkFreqChanged(string Frequency)
         {
@@ -144,6 +157,10 @@ namespace SDRSharp.SatnogsTracker
         {
 
             SatelliteID = SatID;
+        }
+        private void SDRSharp_ElevationChanged(string Elevation)
+        {
+            SatElevation = Elevation;          
         }
         private void SDRSharp_ModuladiontChanged(string Modulation)
         {

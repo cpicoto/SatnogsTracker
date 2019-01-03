@@ -290,11 +290,16 @@ namespace SDRSharp.SatnogsTracker
 
             try
             {
-                ddeclient_.Connect();
-                Console.WriteLine("DDEClient Connected, start Advise");
-                
-                ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
-                //                SatTextBox.Text="[Sat:"+SatName+",EL:"+SatElevation+",AZ:"+SatAzimuth+"], DFreq:"+SatDownLinkFrequency+"]";
+                if (ddeclient_.IsConnected)
+                {
+                    ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
+                }
+                else {
+                    ddeclient_.Connect();
+                    Console.WriteLine("DDEClient Connected, start Advise");
+
+                    ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
+                }
                 Enabled.Invoke(true);
                 Connected?.Invoke(true);
             }
@@ -309,15 +314,16 @@ namespace SDRSharp.SatnogsTracker
 
         public void Stop()
         {
-            try { ddeclient_.Disconnect(); }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception trying to DDE Disconnect:" + e.Message);
-            }
+            if (ddeclient_.IsConnected)
+                ddeclient_.StopAdvise(_LinkItem, 60000);
             Enabled.Invoke(false);
             Connected?.Invoke(false);
         }
 
+        public void Abort()
+        {
+            Console.WriteLine("Abort DDE Client");
+        }
         private void CancelComm()
         {
             this.Stop();
