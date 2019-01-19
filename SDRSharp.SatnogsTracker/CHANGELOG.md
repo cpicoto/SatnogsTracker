@@ -1,5 +1,5 @@
 # SDRSharp.SatnogsTracker Changelog
-## 1.4
+## 1.4 ##
 * New Visualization shows highest elevation per Sat
 ## 1.3
 *Added Satnogs JSON parsers
