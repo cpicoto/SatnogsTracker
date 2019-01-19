@@ -1,4 +1,11 @@
 # SDRSharp.SatnogsTracker Changelog
+## 1.4
+* New Visualization shows highest elevation per Sat
+## 1.3
+*Added Satnogs JSON parsers
+*Loads KEPs from multiple sources
+*Calculates Doppler for Visible Sats/Transmitters
+*Still working on best way to display
 ## v1.2
 *Fixed Exit and Disconnect
 *Stop Recordings if SatElevation reaches 0

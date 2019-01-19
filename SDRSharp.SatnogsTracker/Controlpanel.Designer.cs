@@ -20,7 +20,7 @@
             base.Dispose(disposing);
         }
 
-        #region Vom Komponenten-Designer generierter Code
+        #region Control Panel Forms
 
         /// <summary>
         /// Control Panel Forms

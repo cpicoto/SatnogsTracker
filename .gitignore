@@ -261,3 +261,4 @@ __pycache__/
 *.pyc
 /Release
 /Debug
+/SDRSharp.SatnogsTracker/PaintBand.IL

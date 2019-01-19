@@ -9,32 +9,19 @@ namespace SDRSharp.SatnogsTracker
     
     public partial class Controlpanel : UserControl
     {
-
-
-
-   
-
-
-
-
-
+        private bool enabled_ = false;
+        private bool connected_ = false;
+        public event Action SatPC32ServerStart;
+        public event Action SatPC32ServerStop;
 
         public Controlpanel()
         {
             InitializeComponent();
-
             this.checkBoxEnable.CheckedChanged += CheckBoxEnable_CheckedChanged;
-           //SatPC32Server_Connected_Changed(true);
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             this.labelVersion.Text = "v"+fvi.FileMajorPart+"."+fvi.FileMinorPart;
-
-
-           
- 
-
         }
-
 
         public void SatPC32ServerReceivedFrequencyInHzChanged(String frequency_in_hz)
         {
@@ -48,6 +35,7 @@ namespace SDRSharp.SatnogsTracker
                 this.labelDownlink.Text = frequency_in_hz;
             }
         }
+
         public void SatPC32ServerNameChanged(String SatName)
         {
             if (InvokeRequired)
@@ -140,7 +128,7 @@ namespace SDRSharp.SatnogsTracker
             }
         }
 
-                public void SatPC32ServerRecordAFChanged(Boolean RecordAF)
+        public void SatPC32ServerRecordAFChanged(Boolean RecordAF)
         {
             if (InvokeRequired)
             {
@@ -197,8 +185,7 @@ namespace SDRSharp.SatnogsTracker
                 else this.labelSatPC32Status.Text = "Disconnected";
             }
         }
-
-       
+      
         private void CheckBoxEnable_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox checkbox = sender as CheckBox;
@@ -206,26 +193,21 @@ namespace SDRSharp.SatnogsTracker
             {
                 if (checkbox.Checked)
                 {
+                    enabled_=true;
                     Console.WriteLine("Checkbox Changed");
                     SatPC32ServerStart?.Invoke();
                     
                 } else
                 {
-                    SatPC32ServerStop?.Invoke();
-
-                    
+                    enabled_ = false;
+                    SatPC32ServerStop?.Invoke();     
                 }
             }
         }
 
-        private bool enabled_ = false;
-        private bool connected_ = false;
-        public event Action SatPC32ServerStart;
-        public event Action SatPC32ServerStop;
-
         private void Controlpanel_Load(object sender, EventArgs e)
         {
-
+            //
         }
     }
 }

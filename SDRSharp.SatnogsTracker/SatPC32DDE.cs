@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 
 namespace SDRSharp.SatnogsTracker
 {
-
-    class SatPC32DDE
+    class SatPC32DDE:IDisposable
     {
         private readonly NDde.Client.DdeClient ddeclient_;
-
         private String _SatName;
         private String _SatDownlinkFreq;
         private String _SatAzimuth;
@@ -26,8 +24,6 @@ namespace SDRSharp.SatnogsTracker
         private String _LinkItem;
         private String _DDEServerApp="SatPC32";
 
-
-
         public event Action<String> SatNameChanged;
         public event Action<String> SatDownlinkFreqChanged;
         public event Action<String> SatAzimuthChanged;
@@ -38,7 +34,21 @@ namespace SDRSharp.SatnogsTracker
         public event Action<Boolean> SatRecordAFChanged;
         public event Action<String> SatSatNogsIDChanged;
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // dispose managed resources
+                if (ddeclient_ != null) ddeclient_.Dispose();
+            }
+            // free native resources
+        }
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
         public String DDEServerApp
         {
             get { return _DDEServerApp; }
@@ -81,8 +91,7 @@ namespace SDRSharp.SatnogsTracker
                 {
                     _SatRecordBase = value;
                     SatRecordBaseChanged?.Invoke(_SatRecordBase);
-                }
-                
+                }                
             }
         }
 
@@ -125,7 +134,6 @@ namespace SDRSharp.SatnogsTracker
                 
             }
         }
-
         public string SatDownlinkFreq
         {
             get { return _SatDownlinkFreq; }
@@ -141,7 +149,6 @@ namespace SDRSharp.SatnogsTracker
         public string SatAzimuth
         {
             get { return _SatAzimuth; }
-
             set
             {
                 if (_SatAzimuth != value)
@@ -189,11 +196,8 @@ namespace SDRSharp.SatnogsTracker
                         SatBandwidthChanged?.Invoke(_SatBandwidth);
                     }
                 }
-
             }
         }
-
-
 
         //Constructor
         public SatPC32DDE()
@@ -208,14 +212,33 @@ namespace SDRSharp.SatnogsTracker
 
         public void OnAdvise(Object sender, NDde.Client.DdeAdviseEventArgs e)
         {
-            Console.WriteLine("DDE CLient OnAdvise  Got this:{0}", e.Text);
+            //Console.WriteLine("DDE CLient OnAdvise  Got this:{0}", e.Text);
             ParseDde(e.Text);
         }
 
         public void OnDisconnected(Object sender, NDde.Client.DdeDisconnectedEventArgs e)
         {
             Console.WriteLine("DDE CLient OnDisconnected  Got this:{0}", e.ToString());
+            SatRecordBaseChanged?.Invoke(false);
+            SatRecordAFChanged?.Invoke(false);
             Connected?.Invoke(false);
+            //Start Threadpool to attempt connecting every 30 seconds
+            ThreadPool.QueueUserWorkItem(RetryConnection);
+        }
+
+        public void RetryConnection(Object stateinfo)
+        {
+            while (!ddeclient_.IsConnected)
+            {
+                Thread.Sleep(3000);
+                try { ddeclient_.Connect(); }
+                catch 
+                {
+                    Console.WriteLine("Failed to Connect to DDE Server, waiting...");
+                }
+            }
+            ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
+            Connected?.Invoke(true);
         }
         public void ParseDde(string Input)
         {
@@ -285,9 +308,7 @@ namespace SDRSharp.SatnogsTracker
 
         public void Start()
         {
-
             Console.WriteLine("Created DDEClient, about to Connect");
-
             try
             {
                 if (ddeclient_.IsConnected)
@@ -295,27 +316,34 @@ namespace SDRSharp.SatnogsTracker
                     ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
                 }
                 else {
-                    ddeclient_.Connect();
-                    Console.WriteLine("DDEClient Connected, start Advise");
-
-                    ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
+                    try
+                    {
+                        ddeclient_.Connect();
+                        Console.WriteLine("DDEClient Connected, start Advise");
+                        ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
+                        Connected?.Invoke(true);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Failed to Connect to DDE Server");
+                        ThreadPool.QueueUserWorkItem(RetryConnection);
+                    }
                 }
                 Enabled.Invoke(true);
-                Connected?.Invoke(true);
+                
             }
             catch (Exception e)
             {
                 Console.WriteLine("{0} Exception caught.", e.Message);
             }
-
-
-
         }
 
         public void Stop()
         {
+            /*
             if (ddeclient_.IsConnected)
                 ddeclient_.StopAdvise(_LinkItem, 60000);
+                */
             Enabled.Invoke(false);
             Connected?.Invoke(false);
         }
