@@ -1,7 +1,11 @@
 # SDRSharp.SatnogsTracker Changelog
+## 1.5 ##
+*Validated with Orbitron
+*Added Settings panel to change HomeSite and DDE Server Application
+*Added MIT License Headers to multiple files
 ## 1.4 ##
 * New Visualization shows highest elevation per Sat
-## 1.3
+## 1.3 ##
 *Added Satnogs JSON parsers
 *Loads KEPs from multiple sources
 *Calculates Doppler for Visible Sats/Transmitters
@@ -9,7 +13,7 @@
 ## v1.2
 *Fixed Exit and Disconnect
 *Stop Recordings if SatElevation reaches 0
-## v1.1
+## v1.1 ##
 *Added IQ and AF Recording 
 *DDE String parses the following fields from tracking software
 	SN<Satellite Name>

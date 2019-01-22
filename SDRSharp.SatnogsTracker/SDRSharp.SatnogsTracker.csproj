@@ -108,10 +108,8 @@
     <Content Include="NDde.xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CHANGELOG.md" />
     <None Include="LICENSE" />
     <None Include="packages.config" />
-    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
