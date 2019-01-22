@@ -13,7 +13,7 @@
 	* Copy the Binary to the sdrsharp folder
 
 ## Folders and Files Created ##
-* "Drive":\ProgramData\SDRSharp\SDR#\SatnogsTracker
+* DriveLetter:\ProgramData\SDRSharp\SDR#\SatnogsTracker
 	* TLE Files
 		* active.txt		from http://www.celestrak.com/NORAD/elements/active.txt
 		* amateur.txt		from http://www.dk3wn.info/tle/amateur.txt
@@ -29,13 +29,13 @@
 
 	* Configuration and Logs
 		* MyStation.json created on first run or anytime settings are changed, can be edited manually or from the plugin
-			*{"Callsign":"your callsign>","Latitude":"Value between -90.000 and 90.0000","Longitude":"Value Between -180.0000a and 180.0000","Altitude":" (inKms) Value between 0.000 and 0.300","DDEApp":"Value is either Orbitron or SatPC32 or WxTrack"}
+			* {"Callsign":"your callsign>","Latitude":"Value between -90.000 and 90.0000","Longitude":"Value Between -180.0000a and 180.0000","Altitude":" (inKms) Value between 0.000 and 0.300","DDEApp":"Value is either Orbitron or SatPC32 or WxTrack"}
 		* SatNOGsMapping.json: File with temporary mappings from SatNOG IDS 999?? to norad tracking IDs, can be edited manually.
 			* [{"SatNOGsID":"99911","TrackingID":"43770"},{"SatNOGsID":"99912","TrackingID":"43792"}]
-		* SatnogsTracker_logfile.txt created every time it launchs for debug purposes
+		* SatnogsTracker_logfile.txt created every time SDR launchs for debug purposes
 
-* "Drive":"sdrharp-exe-location"\SatRecordings
-	* "UTC DATE"_"Sat Name"_"norad ID"_[AF|IQ].wav
+* DriveLetter:sdrharp-exe-location\SatRecordings
+	* UTC DATE_Sat Name_norad ID_[AF|IQ].wav
 		* Examples
 			* 2019-01-03T21-50.202238_JAS-2-(FO-29)_24278_AF.wav
 			* 2019-01-03T22-21.016427_JAS-2-(FO-29)_24278_AF.wav
