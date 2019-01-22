@@ -9,7 +9,7 @@
 
 ## Install ##
 * Add the Plugin Key to the Plugins.xml file
-	* <add key="SatnogsTracker" value="SDRSharp.SatnogsTracker.SatnogsTrackerPlugin,SDRSharp.SatnogsTracker" /> 
+	* ```<add key="SatnogsTracker" value="SDRSharp.SatnogsTracker.SatnogsTrackerPlugin,SDRSharp.SatnogsTracker" />``` 
 	* Copy the Binary to the sdrsharp folder
 
 ## Folders and Files Created ##
