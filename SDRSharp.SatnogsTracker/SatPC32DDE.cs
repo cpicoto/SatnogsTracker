@@ -1,4 +1,26 @@
-﻿using System;
+﻿/* 
+    Copyright(c) Carlos Picoto (AD7NP), Inc. All rights reserved. 
+
+    The MIT License(MIT) 
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy 
+    of this software and associated documentation files(the "Software"), to deal 
+    in the Software without restriction, including without limitation the rights 
+    to use, copy, modify, merge, publish, distribute, sublicense, and / or sell 
+    copies of the Software, and to permit persons to whom the Software is 
+    furnished to do so, subject to the following conditions : 
+    The above copyright notice and this permission notice shall be included in 
+    all copies or substantial portions of the Software. 
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE 
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+    THE SOFTWARE. 
+*/
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -179,6 +201,34 @@ namespace SDRSharp.SatnogsTracker
                 {
                     _SatModulation = value;
                     SatModulationChanged?.Invoke(_SatModulation);
+                    if (_ApplicationName=="Orbitron")
+                    {
+                        switch(value)
+                        {
+                            case "FM":
+                                SatBandwidth = "6250";
+                                break;
+                            case "FM-W":
+                                SatBandwidth = "12500";
+                                break;
+                            case "FM-N":
+                                SatBandwidth = "6250";
+                                break;
+                            case "CW-N":
+                                SatBandwidth = "300";
+                                break;
+                            case "CW-W":
+                                SatBandwidth = "2000";
+                                break;
+                            case "USB":
+                            case "LSB":
+                                SatBandwidth = "14000";
+                                break;
+                            default:
+                                SatBandwidth = "12500";
+                                break;
+                        }
+                    }
                 }
             }
         }
@@ -200,11 +250,11 @@ namespace SDRSharp.SatnogsTracker
         }
 
         //Constructor
-        public SatPC32DDE()
+        public SatPC32DDE(String DDEApp)
         {
             //
             Console.WriteLine("Creating DDEClient");
-            DDEServerApp = "SatPC32";
+            DDEServerApp = DDEApp;
             ddeclient_ = new NDde.Client.DdeClient(_ApplicationName, _LinkTopic);
             ddeclient_.Advise += OnAdvise;
             ddeclient_.Disconnected += OnDisconnected;

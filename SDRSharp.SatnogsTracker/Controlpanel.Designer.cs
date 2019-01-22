@@ -1,4 +1,26 @@
-﻿namespace SDRSharp.SatnogsTracker
+﻿/* 
+    Copyright(c) Carlos Picoto (AD7NP), Inc. All rights reserved. 
+
+    The MIT License(MIT) 
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy 
+    of this software and associated documentation files(the "Software"), to deal 
+    in the Software without restriction, including without limitation the rights 
+    to use, copy, modify, merge, publish, distribute, sublicense, and / or sell 
+    copies of the Software, and to permit persons to whom the Software is 
+    furnished to do so, subject to the following conditions : 
+    The above copyright notice and this permission notice shall be included in 
+    all copies or substantial portions of the Software. 
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE 
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+    THE SOFTWARE. 
+*/
+namespace SDRSharp.SatnogsTracker
 {
     partial class Controlpanel
     {
@@ -49,6 +71,8 @@
             this.labelSatNogsID = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.checkBoxRecordAF = new System.Windows.Forms.CheckBox();
+            this.btSettings = new System.Windows.Forms.Button();
+            this.labelGrid = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -256,10 +280,11 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.labelGrid);
             this.groupBox1.Controls.Add(this.checkBoxRecordAF);
             this.groupBox1.Location = new System.Drawing.Point(0, 44);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(415, 473);
+            this.groupBox1.Size = new System.Drawing.Size(415, 508);
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             // 
@@ -276,10 +301,32 @@
             this.checkBoxRecordAF.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.checkBoxRecordAF.UseVisualStyleBackColor = true;
             // 
+            // btSettings
+            // 
+            this.btSettings.Location = new System.Drawing.Point(259, 6);
+            this.btSettings.Name = "btSettings";
+            this.btSettings.Size = new System.Drawing.Size(111, 37);
+            this.btSettings.TabIndex = 29;
+            this.btSettings.Text = "Settings";
+            this.btSettings.UseVisualStyleBackColor = true;
+            this.btSettings.Click += new System.EventHandler(this.btSettings_Click);
+            // 
+            // labelGrid
+            // 
+            this.labelGrid.AutoSize = true;
+            this.labelGrid.Location = new System.Drawing.Point(160, 444);
+            this.labelGrid.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.labelGrid.Name = "labelGrid";
+            this.labelGrid.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.labelGrid.Size = new System.Drawing.Size(48, 25);
+            this.labelGrid.TabIndex = 30;
+            this.labelGrid.Text = "grid";
+            // 
             // Controlpanel
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btSettings);
             this.Controls.Add(this.labelSatNogsID);
             this.Controls.Add(this.labelDescSatnogsID);
             this.Controls.Add(this.labelSatPC32Status);
@@ -303,7 +350,7 @@
             this.Margin = new System.Windows.Forms.Padding(6);
             this.MinimumSize = new System.Drawing.Size(370, 106);
             this.Name = "Controlpanel";
-            this.Size = new System.Drawing.Size(432, 531);
+            this.Size = new System.Drawing.Size(432, 571);
             this.Load += new System.EventHandler(this.Controlpanel_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -335,5 +382,7 @@
         public System.Windows.Forms.Label labelSatNogsID;
         private System.Windows.Forms.GroupBox groupBox1;
         public System.Windows.Forms.CheckBox checkBoxRecordAF;
+        private System.Windows.Forms.Button btSettings;
+        private System.Windows.Forms.Label labelGrid;
     }
 }

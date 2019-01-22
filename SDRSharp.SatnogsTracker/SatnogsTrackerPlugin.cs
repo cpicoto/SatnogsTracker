@@ -1,4 +1,25 @@
-﻿
+﻿/* 
+    Copyright(c) Carlos Picoto (AD7NP), Inc. All rights reserved. 
+
+    The MIT License(MIT) 
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy 
+    of this software and associated documentation files(the "Software"), to deal 
+    in the Software without restriction, including without limitation the rights 
+    to use, copy, modify, merge, publish, distribute, sublicense, and / or sell 
+    copies of the Software, and to permit persons to whom the Software is 
+    furnished to do so, subject to the following conditions : 
+    The above copyright notice and this permission notice shall be included in 
+    all copies or substantial portions of the Software. 
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE 
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+    THE SOFTWARE. 
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,8 +52,10 @@ namespace SDRSharp.SatnogsTracker
         private readonly RecordingAudioProcessor _audioProcessor = new RecordingAudioProcessor();
         private SimpleRecorder _audioRecorder;
         private SimpleRecorder _basebandRecorder;
-        private readonly WavSampleFormat _wavSampleFormat=WavSampleFormat.PCM16;
+        private readonly WavSampleFormat _wavSampleFormat = WavSampleFormat.PCM16;
         private string _SatElevation;
+        String MyStationFilePath = "";
+        String NoradMappingFilePath = "";
 
         List<_Transmitter> Transmitters = new List<_Transmitter>();
         List<_Satellite> Satellites = new List<_Satellite>();
@@ -41,8 +64,8 @@ namespace SDRSharp.SatnogsTracker
         StreamWriter LogFile;
         Site siteHome;
         HamSite siteSettings;
+        Settings dlg = new Settings();
 
-        
         public void Initialize(ISharpControl control)
         {
             Console.WriteLine("Initialize Plugin\r\n");
@@ -60,8 +83,28 @@ namespace SDRSharp.SatnogsTracker
             //Instanciate all needed objects
             _controlpanel = new Controlpanel();
 
+            dlg.HamSiteChanged += StationSiteChanged;
+            dlg.HamSiteChanged += _controlpanel.ControlPanel_HomeSite_Changed;
+            _controlpanel.ShowSettings += ShowSettingsForm;
+            NoradMappingFilePath = DataLocation() + "SatNOGsMapping.json";
+            LoadNoradMappingList();
+
+
+            MyStationFilePath = DataLocation() + "MyStation.json";
+            //HERE
+            if (!File.Exists(MyStationFilePath))
+            {
+                dlg.MySite = new HamSite("Your CallSign", "0.0", "0.0", "0.0", "SatPC32");
+                dlg.Show();
+                //SaveHomeStation();
+            }
+            else
+            {
+                LoadHomeSiteFromJson();
+                dlg.MySite = siteSettings;
+            }
             //Link the objects together
-            SatPC32DDE satpc32Server = new SatPC32DDE();
+            SatPC32DDE satpc32Server = new SatPC32DDE(siteSettings.DDEApp);
             satpc32Server_ = satpc32Server;
 
             #region Setup event handlers
@@ -105,7 +148,7 @@ namespace SDRSharp.SatnogsTracker
             #endregion
 
             #region Load and Setup Satellite and Transmitter data to Memory
-            StartLogFile();           
+            StartLogFile();
             Boolean alwaysdownload = false;
             LoadAllKeps(alwaysdownload);
             LoadSatellitesAndTransmitters(alwaysdownload);
@@ -113,10 +156,39 @@ namespace SDRSharp.SatnogsTracker
             LogFile.Flush();
             #endregion
 
-            LoadHomeSiteFromJson("MyStation.json");
+
+
+
+
             Console.WriteLine("Tracking Initiated");
             //Start Background Doppler Calculations
             ThreadPool.QueueUserWorkItem(CalculateSatVisibility);
+        }
+        private void ShowSettingsForm()
+        {
+            if (dlg.Created) dlg.Show();
+            else
+            {
+                dlg = new Settings();
+                dlg.HamSiteChanged += StationSiteChanged;
+                dlg.HamSiteChanged += _controlpanel.ControlPanel_HomeSite_Changed;
+                dlg.Show();
+            }
+        }
+        private void StationSiteChanged(HamSite obj)
+        {
+            siteSettings = obj;
+            siteHome = new Site(double.Parse(siteSettings.Latitude),
+                    double.Parse(siteSettings.Longitude),
+                    double.Parse(siteSettings.Altitude),
+                    siteSettings.Callsign);
+            if (satpc32Server_ != null)
+            {
+                if (satpc32Server_.DDEServerApp != siteSettings.DDEApp)
+                {
+                    satpc32Server_ = new SatPC32DDE(siteSettings.DDEApp);
+                }
+            }
         }
 
 
@@ -147,7 +219,7 @@ namespace SDRSharp.SatnogsTracker
             CalculateSatVisibilityRunning = false;
             StopBaseRecorder();
             StopAFRecorder();
-            satpc32Server_?.Abort();            
+            satpc32Server_?.Abort();
             LogFile.Close();
         }
 
@@ -201,7 +273,7 @@ namespace SDRSharp.SatnogsTracker
                 LogFile.Close();
             } catch (Exception e)
             {
-                Console.WriteLine("Failed to Close Logfile: {0}",e.Message);
+                Console.WriteLine("Failed to Close Logfile: {0}", e.Message);
                 return false;
             }
             return true;
@@ -250,7 +322,7 @@ namespace SDRSharp.SatnogsTracker
             LoadTxtKeps("tle-new.txt");
         }
 
-        
+
         public string SatelliteName { get; private set; }
         public string SatelliteID { get; private set; }
         public string SatElevation
@@ -269,6 +341,7 @@ namespace SDRSharp.SatnogsTracker
                 }
             }
         }
+
         #endregion
 
         private void SDRSharp_DownlinkFreqChanged(string Frequency)
@@ -402,7 +475,7 @@ namespace SDRSharp.SatnogsTracker
 
         private void SDRSharp_WaterFallCustomPaint(object sender, CustomPaintEventArgs e)
         {
-            CustomPaintEventArgs CustomArgs=e;
+            CustomPaintEventArgs CustomArgs = e;
             Waterfall _waterfall = (Waterfall)sender;
             Point Where = e.CursorPosition; //get
             float MinFreq = _waterfall.CenterFrequency - _waterfall.DisplayedBandwidth / 2;
@@ -420,7 +493,7 @@ namespace SDRSharp.SatnogsTracker
                             long MaxFreqX = (long)(float.Parse(t.DownlinkFreqWithDoppler) + (float.Parse(t.BandwidthHz.ToString()) / 2));
 
                             if ((FreqX >= MinFreqX - 10) && (FreqX <= MaxFreqX + 10))
-                                e.CustomTitle += sat.Name + "(^"+t.CurrentEL.ToString("00.00")+"):" + t.FreqLine + ":" + Dotify(t.DownlinkFreqWithDoppler, 9) + "\r\n";
+                                e.CustomTitle += sat.Name + "(^" + t.CurrentEL.ToString("00.00") + "):" + t.FreqLine + ":" + Dotify(t.DownlinkFreqWithDoppler, 9) + "\r\n";
                         }
                     }
                 }
@@ -445,14 +518,14 @@ namespace SDRSharp.SatnogsTracker
                 if (sat.InSpectrum(MinFreq, MaxFreq))
                 {
                     Spectrum.StatusText += sat;
-                    foreach(var t in sat.Channel)
+                    foreach (var t in sat.Channel)
                     {
-                        if (t.InSpectrum(MinFreq,MaxFreq))
+                        if (t.InSpectrum(MinFreq, MaxFreq))
                         {
-                            int Height = (int)(t.CurrentEL * Spectrum.Height / 90); 
+                            int Height = (int)(t.CurrentEL * Spectrum.Height / 90);
                             int MaxHeight = (int)(sat.NextMaxEl * Spectrum.Height / 90);
-                            Start = new Point((int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler)-t.BandwidthHz/2), 
-                                               Spectrum.Height -Height);
+                            Start = new Point((int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) - t.BandwidthHz / 2),
+                                               Spectrum.Height - Height);
                             Top = new Point((int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) - t.BandwidthHz / 2),
                                                Spectrum.Height - MaxHeight);
                             int Width = (int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) + t.BandwidthHz / 2) - Start.X;
@@ -483,7 +556,7 @@ namespace SDRSharp.SatnogsTracker
             {
                 if (sat.InSpectrum(MinFreq, MaxFreq))
                 {
-                    Spectrum.StatusText += "["+sat.Name+"]";
+                    Spectrum.StatusText += "[" + sat.Name + "]";
                     foreach (var t in sat.Channel)
                     {
                         if (t.InSpectrum(MinFreq, MaxFreq))
@@ -492,13 +565,13 @@ namespace SDRSharp.SatnogsTracker
                             long MinFreqX = (long)(float.Parse(t.DownlinkFreqWithDoppler) - (float.Parse(t.BandwidthHz.ToString()) / 2));
                             long MaxFreqX = (long)(float.Parse(t.DownlinkFreqWithDoppler) + (float.Parse(t.BandwidthHz.ToString()) / 2));
 
-                            if ((FreqX >= MinFreqX-10) && (FreqX <= MaxFreqX+10))
-                                e.CustomTitle += sat.Name + "(^" + t.CurrentEL.ToString("00.00") + "):" + t.FreqLine+":"+Dotify ( t.DownlinkFreqWithDoppler,9) +"\r\n";
+                            if ((FreqX >= MinFreqX - 10) && (FreqX <= MaxFreqX + 10))
+                                e.CustomTitle += sat.Name + "(^" + t.CurrentEL.ToString("00.00") + "):" + t.FreqLine + ":" + Dotify(t.DownlinkFreqWithDoppler, 9) + "\r\n";
                         }
                     }
                 }
             }
-            e.CustomTitle += "\r\n"+Dotify (Spectrum.PointToFrequency(e.CursorPosition.X).ToString(),9);
+            e.CustomTitle += "\r\n" + Dotify(Spectrum.PointToFrequency(e.CursorPosition.X).ToString(), 9);
         }
 
         #region SatNogs Satellite Help Methods
@@ -518,7 +591,7 @@ namespace SDRSharp.SatnogsTracker
             {
                 //Walk the List of Satellites for the ones that don't have NextAOS
                 foreach (_Satellite sat in Satellites)
-                {                  
+                {
                     //Just consider active satellites
                     if (sat.IsActive)
                     {   //Only Consider Sats with valid Transmitters
@@ -555,7 +628,7 @@ namespace SDRSharp.SatnogsTracker
                                         //Console.WriteLine("{0} To to Aos {1}", sat.Name, sat.TimeToAOS);
                                         sat.NextMaxEl = Elevation;
                                         double WhileUp = Elevation;
-                                        for (int secondstoeos = minute*60; (secondstoeos < 60*60* 24) && (WhileUp > 0); secondstoeos++)
+                                        for (int secondstoeos = minute * 60; (secondstoeos < 60 * 60 * 24) && (WhileUp > 0); secondstoeos++)
                                         {
                                             PotentialEOS = DateTime.UtcNow.AddSeconds(secondstoeos);
                                             eciSDP4 = sat.satSDP4.PositionEci(PotentialEOS);
@@ -574,12 +647,13 @@ namespace SDRSharp.SatnogsTracker
                                             {
                                                 sat.NextEOS = PotentialEOS;
                                                 sat.TimeToEOS = PotentialEOS.Subtract(DateTime.Now);
-                                                
+                                                /*
                                                 LogFile.WriteLine("{0}:AOS:{1}/EOS:{2} MaxEl {3}", 
                                                     sat.Name,
                                                     sat.NextAOS,
                                                     sat.NextEOS,
                                                     sat.NextMaxEl);
+                                                */
                                                 Console.WriteLine("{0}:AOS:{1}/EOS:{2} MaxEl {3}",
                                                     sat.Name,
                                                     sat.NextAOS,
@@ -607,7 +681,7 @@ namespace SDRSharp.SatnogsTracker
                                     sat.TimeToAOS = sat.NextAOS.Subtract(RightNow);
 
                                     //If EOS is still in the future.
-                                    if (sat.NextEOS>=RightNow)
+                                    if (sat.NextEOS >= RightNow)
                                     {
                                         //Calculate Doppler for Active Frequencies.
                                         try
@@ -630,8 +704,8 @@ namespace SDRSharp.SatnogsTracker
                                             if (sat.CurrentEL >= 0) //Positive Elevation calculate all doppler freqs
                                             {
                                                 int counter = 0;
-                                                String LastFreqCache="";
-                                                String LastDopplerFreqCache="";
+                                                String LastFreqCache = "";
+                                                String LastDopplerFreqCache = "";
                                                 foreach (var t in sat.Channel)
                                                 {
                                                     t.CurrentEL = sat.CurrentEL;
@@ -643,7 +717,7 @@ namespace SDRSharp.SatnogsTracker
                                                         double newdownlink = dopp + downlink;
                                                         t.DownlinkFreqWithDoppler = newdownlink.ToString("f0");
                                                         LastFreqCache = t.DownlinkFreq;
-                                                        LastDopplerFreqCache = t.DownlinkFreqWithDoppler;   
+                                                        LastDopplerFreqCache = t.DownlinkFreqWithDoppler;
                                                     }
                                                     else
                                                     {
@@ -660,7 +734,7 @@ namespace SDRSharp.SatnogsTracker
                                 }
                                 else
                                 {   //Not reached AOS yet
-                                    sat.TimeToAOS = sat.NextAOS.Subtract(sat.NextAOS);                                 
+                                    sat.TimeToAOS = sat.NextAOS.Subtract(sat.NextAOS);
                                 }
 
                                 if (sat.NextEOS > RightNow)
@@ -673,14 +747,17 @@ namespace SDRSharp.SatnogsTracker
                                 if (sat.HasNextAOS && (RightNow > sat.NextEOS))
                                 {
                                     sat.HasNextAOS = false;
+                                    sat.NextMaxEl = -1;
                                     //sat.CurrentEL = -1;
                                     //sat.TimeToEOS = sat.NextAOS.Subtract(sat.NextAOS);
+                                    /*
                                     LogFile.WriteLine("EOS passed for {0} Aos:{1} Eos:{2} and now is {3}", 
                                         sat.Name,
                                         sat.NextAOS,
                                         sat.NextEOS,
                                         RightNow);
                                     LogFile.Flush();
+                                    */
                                 }
                             }
                         }
@@ -690,7 +767,7 @@ namespace SDRSharp.SatnogsTracker
                 Thread.Sleep(500);
             }
         }
-        
+
         _Satellite FindSatelliteByNumber(string Number)
         {
             foreach (_Satellite s in Satellites)
@@ -718,22 +795,22 @@ namespace SDRSharp.SatnogsTracker
             {
                 Tle t = new Tle(NameIn, Keps1, Keps2);
                 Satellites.Add(new _Satellite()
-                                    {
-                                        Name = NameIn.Trim(),
-                                        Number = SatNumber,
-                                        KepSource = FileIn,
-                                        KepsLine1 = Keps1,
-                                        KepsLine2 = Keps2,
-                                        Tle1 = t,
-                                        satSDP4 = new Satellite(t),
-                                        HasKeps = true,
-                                        IsVisible = false,
-                                        IsActive = true,
-                                        IsDecay = false,
-                                        nChannels = 0,
-                                        Radius = 0,
-                                        Footprint = 0,
-                                    }
+                {
+                    Name = NameIn.Trim(),
+                    Number = SatNumber,
+                    KepSource = FileIn,
+                    KepsLine1 = Keps1,
+                    KepsLine2 = Keps2,
+                    Tle1 = t,
+                    satSDP4 = new Satellite(t),
+                    HasKeps = true,
+                    IsVisible = false,
+                    IsActive = true,
+                    IsDecay = false,
+                    nChannels = 0,
+                    Radius = 0,
+                    Footprint = 0,
+                }
                                  );
             }
             else
@@ -759,7 +836,7 @@ namespace SDRSharp.SatnogsTracker
             string Filename = DataLocation() + file;
 
             try
-            {               
+            {
                 StreamReader reader = File.OpenText(Filename);
                 string KepsLine1, KepsLine2;
                 string line;
@@ -772,7 +849,7 @@ namespace SDRSharp.SatnogsTracker
                 }
                 while (((line = reader.ReadLine()) != null))
                 {
-                    if ( (line != "") && (line !="/EX"))
+                    if ((line != "") && (line != "/EX"))
                     {
                         KepsLine1 = reader.ReadLine();
                         KepsLine2 = reader.ReadLine();
@@ -793,7 +870,7 @@ namespace SDRSharp.SatnogsTracker
         public const int DAYS_BEFORE_DOWNLOAD = 7;
         private StreamWriter BandPlanFile = null;
         public void ListSatellitesfromCollection()
-        {       
+        {
             try { BandPlanFile = new StreamWriter(ProgramLocation() + "BandPlan.xml"); }
             catch (Exception e)
             {
@@ -813,7 +890,7 @@ namespace SDRSharp.SatnogsTracker
                     LogFile.WriteLine("   Keps from:" + sat.KepSource);
                     if (sat.Channel != null) LogFile.WriteLine(" N# Channels:" + sat.Channel.Count);
                     LogFile.WriteLine(".........................................................................................................");
-                    if (sat.Channel!=null)
+                    if (sat.Channel != null)
                         foreach (_Transmitter trx in sat.Channel)
                         {
                             //LogFile.WriteLine("\t>>>>>Channel:" + i.ToString());
@@ -839,7 +916,7 @@ namespace SDRSharp.SatnogsTracker
                             }
 
                         }
-                    
+
                     LogFile.WriteLine();
                 }
 
@@ -847,7 +924,7 @@ namespace SDRSharp.SatnogsTracker
             //Console.WriteLine();
             BandPlanFile.WriteLine("</ArrayOfRangeEntry>");
             BandPlanFile.Flush();
-            BandPlanFile.Close();         
+            BandPlanFile.Close();
         }
 
         /// <summary>
@@ -914,14 +991,14 @@ namespace SDRSharp.SatnogsTracker
         }
 
         public Boolean LoadSatsfromJson(string file)
-        {            
+        {
             _Satellite sat = null;
             List<JsonSatellite> Sats;
-            file = DataLocation() +  file;
+            file = DataLocation() + file;
             StreamReader reader = File.OpenText(file);
             try
             {
-               Sats = (List<JsonSatellite>)Newtonsoft.Json.JsonConvert.DeserializeObject<List<JsonSatellite>>(reader.ReadLine());                
+                Sats = (List<JsonSatellite>)Newtonsoft.Json.JsonConvert.DeserializeObject<List<JsonSatellite>>(reader.ReadLine());
             }
             catch (Exception e)
             {
@@ -935,10 +1012,10 @@ namespace SDRSharp.SatnogsTracker
                 String stat = (String)s.status;
                 String noradID = (String)s.norad_cat_id.ToString();
                 String Name = (String)s.name;
-                
+
                 if (noradID.StartsWith("999"))
                 {
-                    s.norad_cat_id = ReplaceTempID(noradID);
+                    s.norad_cat_id = int.Parse(ReplaceTempID(noradID));
                     LogFile.WriteLine("Mapping Satelite {0} from {1} to {2} ", Name, noradID, s.norad_cat_id);
                 }
 
@@ -989,17 +1066,23 @@ namespace SDRSharp.SatnogsTracker
             return true;
         }
 
-        public Boolean LoadHomeSiteFromJson(string file)
+        public void SatnogsCallsignChanged(String Call)
         {
-            file = DataLocation() + file;
-            String GridSquare = LatLonToGridSquare(47.6458, -122.2084);
-            if (!File.Exists(file))
+            siteSettings.Callsign = Call;
+        }
+        public Boolean LoadHomeSiteFromJson()
+        {
+            if (!File.Exists(MyStationFilePath))
             {
                 try
                 {
-                    siteSettings = new HamSite("HOME", "47.6458", "-122.2084", "0.065");
-                    
-                    using (StreamWriter fileHandle = File.CreateText(file))
+                    siteSettings = new HamSite("HOME", "47.6458", "-122.2084", "0.065", "SatPC32");
+
+
+
+
+
+                    using (StreamWriter fileHandle = File.CreateText(MyStationFilePath))
                     {
                         JsonSerializer serializer = new JsonSerializer();
                         serializer.Serialize(fileHandle, siteSettings);
@@ -1007,13 +1090,13 @@ namespace SDRSharp.SatnogsTracker
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Failed to Open {0} with Exception:{1}", file, e.Message);
+                    Console.WriteLine("Failed to Open {0} with Exception:{1}", MyStationFilePath, e.Message);
                     return false;
                 }
             }
             else
             {
-                StreamReader reader = File.OpenText(file);
+                StreamReader reader = File.OpenText(MyStationFilePath);
                 try
                 {
                     siteSettings = (HamSite)Newtonsoft.Json.JsonConvert.DeserializeObject<HamSite>(reader.ReadLine());
@@ -1031,7 +1114,7 @@ namespace SDRSharp.SatnogsTracker
                     double.Parse(siteSettings.Altitude),
                     siteSettings.Callsign);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine("Failed to create siteHome with exception:{0}", e.Message);
                 return false;
@@ -1041,12 +1124,12 @@ namespace SDRSharp.SatnogsTracker
         public void LoadTransmittersfromJson(string file)
         {
             _Satellite sat = null;
-            StreamReader reader = File.OpenText(DataLocation()+file);
+            StreamReader reader = File.OpenText(DataLocation() + file);
             string Descr;
             string TrxBand;
             List<JsonTransmitter> Transmitters = (List<JsonTransmitter>)Newtonsoft.Json.JsonConvert.DeserializeObject<List<JsonTransmitter>>(reader.ReadLine());
 
-            foreach(JsonTransmitter t in Transmitters)
+            foreach (JsonTransmitter t in Transmitters)
             {
                 //LogFile.WriteLine("JSON Transmitter: uuid:{0} descr:{1} alive:{2} Uplink_low:{3} Uplink_high:{4}, Downlink_Low:{5}, Downlink_High:{6}, mode_id:{7}, invert:{8}, baud:{9}, norad_cat_id:{10}", t.uuid, t.description, t.alive, t.uplink_low, t.uplink_high,t.downlink_low, t.downlink_high, t.mode_id, t.invert, t.baud, t.norad_cat_id);
                 //Console.WriteLine("JSON Transmitter: {0}-{1} or {2}", t.norad_cat_id.ToString(), t.description, t.downlink_low);
@@ -1054,7 +1137,7 @@ namespace SDRSharp.SatnogsTracker
                 String noradID = t.norad_cat_id.ToString();
                 if (noradID.StartsWith("999"))
                 {
-                    t.norad_cat_id = ReplaceTempID(noradID);
+                    t.norad_cat_id = int.Parse(ReplaceTempID(noradID));
                     LogFile.WriteLine("Mapping Satelite TRX from {0} to {1} \r\n", noradID, t.norad_cat_id);
                 }
                 sat = FindSatelliteByNumber(t.norad_cat_id.ToString());
@@ -1283,61 +1366,91 @@ namespace SDRSharp.SatnogsTracker
             }
             reader.Close();
         }
-
-        public int ReplaceTempID(string ID)
+        public class NoradMappingLine
         {
-            //TODO: Move to Json file mapping\
-            int value = Int32.Parse(ID);
-            //if (ID == "99900")      value = 43743; //REAKTOR
-            //else if (ID == "99901") value = ; //3CAT-1  
-            //else if (ID == "99910") value = 43780; //MOVE-II
-            if (ID == "99911") value = 43770; //FOC-1C (AO-95)
-            else if (ID == "99912") value = 43792; //ESEO                       
-            else if (ID == "99913") value = 43761; //K2SAT 
-            else if (ID == "99914") value = 43770; //ExseedSat 1 (VO-96)
-            else if (ID == "99915") value = 43789; //IRVINE 02 
-            else if (ID == "99916") value = 43798; //Astrocast 0.1
-            //else if (ID == "99917") value = 43763; //Centauri-1 
-            else if (ID == "99918") value = 43793; //CSIM
-            else if (ID == "99919") value = 43786; //ITASAT-1
-            //else if (ID == "99920") value = 43803; //JY1SAT
-            //else if (ID == "99921") value = 43763; //KACKKSAT
-            else if (ID == "99922") value = 43807; //MinXSS-2
-            //else if (ID == "99923") value = 43779; //PW-Sat2
-            else if (ID == "99924") value = 43798; //RANGE-A
-            else if (ID == "99925") value = 43773; //RANGE-B
-            //else if (ID == "99926") value = 43798; //SeeMe
-            else if (ID == "99927") value = 43786; //SNUGLITE
-            else if (ID == "99928") value = 43782; //SNUSAT-2 
-            else if (ID == "99929") value = 43804; //SUOMI100
-            //else if (ID == "99930") value = 43798; //VisionCube
-            //else if (ID == "99931") value = 43768; //Mystery-1 Hamilton
-            else if (ID == "99932") value = 43805; //al-Farabi-2
-            //else if (ID == "99933") value = 43790; //Eaglet-1
-            //else if (ID == "99937") value = 43798; //SNUSAIL-1
-            //else if (ID == "99939") value = 43798; //KAUSAT-5
-            //else if (ID == "99940") value = 43798; //Da Vinci
-            //else if (ID == "99941") value = 43855; //CHOMPTT
-            //else if (ID == "99942") value = 43798; //CP11 (ISX)
-            //else if (ID == "99943") value = 43798; //CubeSail-1
-            //else if (ID == "99944") value = 43798; //NMTSat
-            else if (ID == "99950") value = 43879; //D-STAR ONE
-            else if (ID == "99951") value = 43880; //UWE-4
-            //else if (ID == "99952") value = 43888; //ZACUBE-2
-            else if (ID == "99953") value = 43907; //LUME-1
-            //else if (ID == "99962") value = 43798; //MEMSAT
-            //else if (ID == "99962") value = 43798; //MEMSAT
-            //else if (ID == "99963") value = 43798; //RADSAT-G
-            //else if (ID == "99975") value = 43798; //JJ2YTA AUTCube1
-            //else if (ID == "99981") value = 43798; //RSP-00
-            return value;
+            public String SatNOGsID { get; set; }
+            public String TrackingID { get; set; }
+            public NoradMappingLine(String sID, String nID)
+            {
+                SatNOGsID = sID;
+                TrackingID = nID;
+            }
+        }
+        public List<NoradMappingLine> NoradMappingList;
+        public String ReplaceTempID(string ID)
+        {
+            if (NoradMappingList==null)
+            {
+                LoadNoradMappingList();
+            }
+            foreach (NoradMappingLine n in NoradMappingList)
+            {
+                if (ID == n.SatNOGsID)
+                {
+                    return n.TrackingID;
+                }
+            }
+            return ID;
+        }
+
+        private void LoadNoradMappingList()
+        {
+            if (File.Exists(NoradMappingFilePath))
+            {
+                //Load file
+                StreamReader reader = File.OpenText(NoradMappingFilePath);
+                try
+                {
+                    NoradMappingList = (List<NoradMappingLine>)Newtonsoft.Json.JsonConvert.DeserializeObject<List<NoradMappingLine>>(reader.ReadLine());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(">>>LoadNoradMappingList>>: Failed to load:{0}", e.Message);
+                    return;
+                }
+            }
+            else
+            {
+                //Create Initial mappings as of 1/21/2019
+                NoradMappingList = new List<NoradMappingLine>();
+                NoradMappingList.Add(new NoradMappingLine("99911", "43770")); //FOX-1C 
+                NoradMappingList.Add(new NoradMappingLine("99912", "43792")); //ESEO
+                NoradMappingList.Add(new NoradMappingLine("99913", "43761")); //K2SAT
+                NoradMappingList.Add(new NoradMappingLine("99914", "43770")); //ExseedSat 1 (VO-96)
+                NoradMappingList.Add(new NoradMappingLine("99915", "43789")); //IRVINE 02
+                NoradMappingList.Add(new NoradMappingLine("99916", "43798")); //Astrocast 0.1
+                NoradMappingList.Add(new NoradMappingLine("99917", "43763")); //Centauri-1
+                NoradMappingList.Add(new NoradMappingLine("99918", "43793")); //CSIM-FD
+                NoradMappingList.Add(new NoradMappingLine("99919", "43786")); //ITASAT-1
+                NoradMappingList.Add(new NoradMappingLine("99922", "43807")); //MinXSS-2
+                NoradMappingList.Add(new NoradMappingLine("99924", "43798")); //RANGE-A
+                NoradMappingList.Add(new NoradMappingLine("99925", "43773")); //RANGE-B
+                NoradMappingList.Add(new NoradMappingLine("99927", "43786")); //SNUGLITE
+                NoradMappingList.Add(new NoradMappingLine("99928", "43782")); //SNUSAT-2
+                NoradMappingList.Add(new NoradMappingLine("99929", "43804")); //SUOMI100
+                NoradMappingList.Add(new NoradMappingLine("99932", "43805")); //Al-Farabi-2
+                NoradMappingList.Add(new NoradMappingLine("99950", "43879")); //D-START ONE
+                NoradMappingList.Add(new NoradMappingLine("99951", "43880")); //UWE-4
+                NoradMappingList.Add(new NoradMappingLine("99953", "43907")); //LUME-1
+                                                                              //NoradMappingList.Add(new NoradMappingLine("99962", "???")); //MEMSAT
+                                                                              //NoradMappingList.Add(new NoradMappingLine("99975", "???")); //AJJSYTA AUTCube1
+                                                                              //NoradMappingList.Add(new NoradMappingLine("99981", "???")); //RSP-00
+                                                                              //Save List to file
+                using (StreamWriter fileHandle = File.CreateText(NoradMappingFilePath))
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Serialize(fileHandle, NoradMappingList);
+                    fileHandle.Close();
+                }
+
+            }               
         }
 
         private string Dotify(string Freq, int size)
         {
             string result = "";
             if (Freq == null) return "";
-            Freq = Freq.Substring(0, size);
+            Freq = Freq.Substring(0, Math.Min(size, Freq.Length));
             if (Freq.Length == 5) result = Freq.Substring(0, 2) + "." + Freq.Substring(2, 3);
             else if (Freq.Length == 6) result = Freq.Substring(0, 3) + "." + Freq.Substring(3, 3);
             else if (Freq.Length == 9) result = Freq.Substring(0, 3) + "." + Freq.Substring(3, 3) + "." + Freq.Substring(6, 3);
@@ -1348,35 +1461,7 @@ namespace SDRSharp.SatnogsTracker
             return result;
         }
 
-        public static String LatLonToGridSquare(double lat, double lon)
-        {
-            double adjLat, adjLon;
-            char GLat, GLon;
-            String nLat, nLon;
-            char gLat, gLon;
-            double rLat, rLon;
-            String U = "ABCDEFGHIJKLMNOPQRSTUVWX";
-            String L = U.ToLower();
-
-            if (double.IsNaN(lat)) throw new Exception("lat is NaN");
-            if (double.IsNaN(lon)) throw new Exception("lon is NaN");
-            if (Math.Abs(lat) == 90.0) throw new Exception("grid squares invalid at N/S poles");
-            if (Math.Abs(lat) > 90) throw new Exception("invalid latitude: " + lat);
-            if (Math.Abs(lon) > 180) throw new Exception("invalid longitude: " + lon);
-
-            adjLat = lat + 90;
-            adjLon = lon + 180;
-            GLat = U[(int)(adjLat / 10)];
-            GLon = U[(int)(adjLon / 20)];
-            nLat = "" + (int)(adjLat % 10);
-            nLon = "" + (int)((adjLon / 2) % 10);
-            rLat = (adjLat - (int)(adjLat)) * 60;
-            rLon = (adjLon - 2 * (int)(adjLon / 2)) * 60;
-            gLat = L[(int)(rLat / 2.5)];
-            gLon = L[(int)(rLon / 5)];
-            String locator = "" + GLon + GLat + nLon + nLat + gLon + gLat;
-            return locator;
-        }
+ 
         #endregion
     }
     //End of Class SatnogsTrackerPlugin
@@ -1827,19 +1912,22 @@ namespace SDRSharp.SatnogsTracker
 
     public class HamSite 
     {
-        public HamSite(String inCallSign, String inLatitude, String inLongitude, String inAltitude)
+        public HamSite(String inCallSign, String inLatitude, String inLongitude, String inAltitude, String inDDEApp)
             //double.parse(Latitude), double.parse(Latitude),Callsing))
         {
             Callsign = inCallSign;
             Latitude = inLatitude;
             Longitude = inLongitude;
             Altitude = inAltitude;
+            DDEApp = inDDEApp;
+
             //_homeSite = new Site(double.Parse(Latitude), double.Parse(Longitude), double.Parse(Altitude), Callsign);          
         }
         public String Callsign { get; set; }
         public String Latitude { get; set; }
         public String Longitude { get; set; }
         public String Altitude { get; set; }
+        public String DDEApp { get; set; }
         /*
          * public Site HomeSite
         {

@@ -1,4 +1,8 @@
 # SDRSharp.SatnogsTracker Changelog
+## 1.5 ##
+*Validated with Orbitron
+*Added Settings panel to change HomeSite and DDE Server Application
+*Added MIT License Headers to multiple files
 ## 1.4 ##
 * New Visualization shows highest elevation per Sat
 ## 1.3 ##
