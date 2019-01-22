@@ -9,7 +9,7 @@
 
 ## Install ##
 * Add the Plugin Key to the Plugins.xml file
-	* \<add key=\"SatnogsTracker\" value=\"SDRSharp.SatnogsTracker.SatnogsTrackerPlugin,SDRSharp.SatnogsTracker\" /\> 
+	* <add key="SatnogsTracker" value="SDRSharp.SatnogsTracker.SatnogsTrackerPlugin,SDRSharp.SatnogsTracker" /> 
 	* Copy the Binary to the sdrsharp folder
 
 ## Folders and Files Created ##
@@ -41,7 +41,7 @@
 			* 2019-01-03T22-21.016427_JAS-2-(FO-29)_24278_AF.wav
 
 ## Credits and References
-* OrbitTools Library - Public Edition - Copyright © 2003-2017 Michael F. Henry - http://zeptomoby.com/satellites/index.htm
+* OrbitTools Library - Public Edition - Copyright Â© 2003-2017 Michael F. Henry - http://zeptomoby.com/satellites/index.htm
 * Doppler calculations based on Predict formulas from KD2BD https://www.qsl.net/kd2bd/index.html
 * Started from GpredictConnector by Alex Wahl, Copyright (c) 2018 Alex Wahl
 * Mike Rupprecht, DK3WN and his Satblog http://www.dk3wn.info/p/
