@@ -10,7 +10,11 @@
 ## Install ##
 * Add the Plugin Key to the Plugins.xml file
 	* ```<add key="SatnogsTracker" value="SDRSharp.SatnogsTracker.SatnogsTrackerPlugin,SDRSharp.SatnogsTracker" />``` 
-	* Copy the Binary to the sdrsharp folder
+	* Copy the Binaries to the sdrsharp folder
+		* SDRSharp.SatnogsTracker.dll
+		* Zeptomoby.OrbitTools.Core.dll
+		* Zeptomoby.OrbitTools.Orbit.dll
+		* Newtonsoft.Json.dll
 
 ## Folders and Files Created ##
 * DriveLetter:\ProgramData\SDRSharp\SDR#\SatnogsTracker
@@ -29,9 +33,9 @@
 
 	* Configuration and Logs
 		* MyStation.json created on first run or anytime settings are changed, can be edited manually or from the plugin
-			* {"Callsign":"your callsign>","Latitude":"Value between -90.000 and 90.0000","Longitude":"Value Between -180.0000a and 180.0000","Altitude":" (inKms) Value between 0.000 and 0.300","DDEApp":"Value is either Orbitron or SatPC32 or WxTrack"}
+			* ```{"Callsign":"your callsign>","Latitude":"Value between -90.000 and 90.0000","Longitude":"Value Between -180.0000a and 180.0000","Altitude":" (inKms) Value between 0.000 and 0.300","DDEApp":"Value is either Orbitron or SatPC32 or WxTrack"}```
 		* SatNOGsMapping.json: File with temporary mappings from SatNOG IDS 999?? to norad tracking IDs, can be edited manually.
-			* [{"SatNOGsID":"99911","TrackingID":"43770"},{"SatNOGsID":"99912","TrackingID":"43792"}]
+			* ```[{"SatNOGsID":"99911","TrackingID":"43770"},{"SatNOGsID":"99912","TrackingID":"43792"}]```
 		* SatnogsTracker_logfile.txt created every time SDR launchs for debug purposes
 
 * DriveLetter:sdrharp-exe-location\SatRecordings

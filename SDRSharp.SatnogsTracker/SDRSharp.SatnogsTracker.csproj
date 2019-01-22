@@ -114,6 +114,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\$(ConfigurationName)
-copy $(TargetDir)$(TargetFileName) C:\sdrsharp-x86</PostBuildEvent>
+copy $(TargetDir)$(TargetFileName) C:\sdrsharp-x86
+copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\Binaries\$(ConfigurationName)</PostBuildEvent>
   </PropertyGroup>
 </Project>
