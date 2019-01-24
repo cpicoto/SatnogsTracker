@@ -220,7 +220,6 @@ namespace SDRSharp.SatnogsTracker
                 else this.labelSatPC32Status.Text = "Disconnected";
             }
         }
-
         public void ControlPanel_HomeSite_Changed(HamSite site)
         {
             if (InvokeRequired)

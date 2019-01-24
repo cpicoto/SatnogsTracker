@@ -65,6 +65,8 @@ namespace SDRSharp.SatnogsTracker
             this.textBox4 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.button3 = new System.Windows.Forms.Button();
+            this.labelUpdateStatus = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // labelCallsign
@@ -110,7 +112,7 @@ namespace SDRSharp.SatnogsTracker
             // button1
             // 
             this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button1.Location = new System.Drawing.Point(96, 339);
+            this.button1.Location = new System.Drawing.Point(96, 326);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(134, 58);
             this.button1.TabIndex = 6;
@@ -121,7 +123,7 @@ namespace SDRSharp.SatnogsTracker
             // button2
             // 
             this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button2.Location = new System.Drawing.Point(240, 339);
+            this.button2.Location = new System.Drawing.Point(240, 326);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(146, 58);
             this.button2.TabIndex = 7;
@@ -184,11 +186,34 @@ namespace SDRSharp.SatnogsTracker
             this.comboBox1.Size = new System.Drawing.Size(206, 39);
             this.comboBox1.TabIndex = 13;
             // 
+            // button3
+            // 
+            this.button3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button3.Location = new System.Drawing.Point(96, 402);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(290, 54);
+            this.button3.TabIndex = 14;
+            this.button3.Text = "Update TLE";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // labelUpdateStatus
+            // 
+            this.labelUpdateStatus.AutoSize = true;
+            this.labelUpdateStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelUpdateStatus.Location = new System.Drawing.Point(184, 478);
+            this.labelUpdateStatus.Name = "labelUpdateStatus";
+            this.labelUpdateStatus.Size = new System.Drawing.Size(0, 51);
+            this.labelUpdateStatus.Text = "Ready";
+            this.labelUpdateStatus.TabIndex = 15;
+            // 
             // Settings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(474, 447);
+            this.ClientSize = new System.Drawing.Size(474, 539);
+            this.Controls.Add(this.labelUpdateStatus);
+            this.Controls.Add(this.button3);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox4);
@@ -221,5 +246,7 @@ namespace SDRSharp.SatnogsTracker
         private System.Windows.Forms.TextBox textBox4;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Label labelUpdateStatus;
     }
 }

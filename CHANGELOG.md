@@ -1,4 +1,8 @@
 # SDRSharp.SatnogsTracker Changelog
+## 1.5.1
+* Fixed starting point of the red bars
+* Added settings option to update TLEs and re-download Sats and Transmitters
+* Fine tuned bandwidth calculations
 ## 1.5 ##
 * Validated with Orbitron
 * Added Settings panel to change HomeSite and DDE Server Application

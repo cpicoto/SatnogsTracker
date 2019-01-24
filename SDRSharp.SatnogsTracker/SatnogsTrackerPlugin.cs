@@ -54,6 +54,7 @@ namespace SDRSharp.SatnogsTracker
         private SimpleRecorder _basebandRecorder;
         private readonly WavSampleFormat _wavSampleFormat = WavSampleFormat.PCM16;
         private string _SatElevation;
+        public Action<String> UpdateStatus;
         String MyStationFilePath = "";
         String NoradMappingFilePath = "";
 
@@ -82,9 +83,12 @@ namespace SDRSharp.SatnogsTracker
 
             //Instanciate all needed objects
             _controlpanel = new Controlpanel();
-
+            
             dlg.HamSiteChanged += StationSiteChanged;
             dlg.HamSiteChanged += _controlpanel.ControlPanel_HomeSite_Changed;
+
+            dlg.UpdateTle += UpdateTleData;
+
             _controlpanel.ShowSettings += ShowSettingsForm;
             NoradMappingFilePath = DataLocation() + "SatNOGsMapping.json";
             LoadNoradMappingList();
@@ -148,22 +152,26 @@ namespace SDRSharp.SatnogsTracker
             #endregion
 
             #region Load and Setup Satellite and Transmitter data to Memory
-            StartLogFile();
-            Boolean alwaysdownload = false;
-            LoadAllKeps(alwaysdownload);
-            LoadSatellitesAndTransmitters(alwaysdownload);
-            ListSatellitesfromCollection(); //List everything to Logfile
-            LogFile.Flush();
+            UpdateTleData(false);
             #endregion
-
-
-
-
 
             Console.WriteLine("Tracking Initiated");
             //Start Background Doppler Calculations
             ThreadPool.QueueUserWorkItem(CalculateSatVisibility);
         }
+
+        private void  UpdateTleData(Boolean alwaysdownload)
+        {
+            StartLogFile();
+            //Boolean alwaysdownload = false;
+            LoadAllKeps(alwaysdownload);
+            LoadSatellitesAndTransmitters(alwaysdownload);
+            ListSatellitesfromCollection(); //List everything to Logfile
+            UpdateStatus?.Invoke("TLE Updated");
+            LogFile.Flush();
+            StopLogFile();
+        }
+
         private void ShowSettingsForm()
         {
             if (dlg.Created) dlg.Show();
@@ -172,6 +180,8 @@ namespace SDRSharp.SatnogsTracker
                 dlg = new Settings();
                 dlg.HamSiteChanged += StationSiteChanged;
                 dlg.HamSiteChanged += _controlpanel.ControlPanel_HomeSite_Changed;
+                dlg.UpdateTle += UpdateTleData;
+                UpdateStatus += dlg.UpdateStatus;
                 dlg.Show();
             }
         }
@@ -522,12 +532,12 @@ namespace SDRSharp.SatnogsTracker
                     {
                         if (t.InSpectrum(MinFreq, MaxFreq))
                         {
-                            int Height = (int)(t.CurrentEL * Spectrum.Height / 90);
-                            int MaxHeight = (int)(sat.NextMaxEl * Spectrum.Height / 90);
+                            int Height = (int)(t.CurrentEL * (Spectrum.Height-30) / 90);
+                            int MaxHeight = (int)(sat.NextMaxEl * (Spectrum.Height-30) / 90);
                             Start = new Point((int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) - t.BandwidthHz / 2),
-                                               Spectrum.Height - Height);
+                                               Spectrum.Height - Height-30);
                             Top = new Point((int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) - t.BandwidthHz / 2),
-                                               Spectrum.Height - MaxHeight);
+                                               Spectrum.Height - MaxHeight-30);
                             int Width = (int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) + t.BandwidthHz / 2) - Start.X;
                             Output_Rectangle = new Rectangle(Start, new Size(Width, Height));
                             myBrush = new SolidBrush(Color.Red);
@@ -827,7 +837,7 @@ namespace SDRSharp.SatnogsTracker
         public Boolean LoadTxtKeps(string file)
         {
             Boolean IsNasaAll;
-
+            UpdateStatus?.Invoke(file);
             if (file == "nasa.all")
                 IsNasaAll = true;
             else
@@ -995,6 +1005,7 @@ namespace SDRSharp.SatnogsTracker
             _Satellite sat = null;
             List<JsonSatellite> Sats;
             file = DataLocation() + file;
+            UpdateStatus?.Invoke(file);
             StreamReader reader = File.OpenText(file);
             try
             {
@@ -1127,6 +1138,7 @@ namespace SDRSharp.SatnogsTracker
             StreamReader reader = File.OpenText(DataLocation() + file);
             string Descr;
             string TrxBand;
+            UpdateStatus?.Invoke(file);
             List<JsonTransmitter> Transmitters = (List<JsonTransmitter>)Newtonsoft.Json.JsonConvert.DeserializeObject<List<JsonTransmitter>>(reader.ReadLine());
 
             foreach (JsonTransmitter t in Transmitters)
@@ -1173,7 +1185,9 @@ namespace SDRSharp.SatnogsTracker
                     if (trx.BandwidthHz == 0)
                     {
                         if ((trx.FreqLine.IndexOf("1200") != -1) || (trx.FreqLine.IndexOf("1k2") != -1) || (trx.FreqLine.IndexOf("1K2") != -1))
-                            trx.BandwidthHz = 9000;
+                            trx.BandwidthHz = 5000;
+                        else if ((trx.FreqLine.IndexOf("4800") != -1) || (trx.FreqLine.IndexOf("4k8") != -1) || (trx.FreqLine.IndexOf("4K8") != -1))
+                            trx.BandwidthHz = 6500;
                         else if ((trx.FreqLine.IndexOf("9600") != -1) || (trx.FreqLine.IndexOf("9k6") != -1) || (trx.FreqLine.IndexOf("9K6") != -1))
                             trx.BandwidthHz = 12500;
                         else if ((trx.FreqLine.IndexOf("19200") != -1) || (trx.FreqLine.IndexOf("19k2") != -1) || (trx.FreqLine.IndexOf("19K2") != -1) || (trx.FreqLine.IndexOf("40k") != -1))

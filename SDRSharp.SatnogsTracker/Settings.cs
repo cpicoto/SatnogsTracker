@@ -31,6 +31,7 @@ namespace SDRSharp.SatnogsTracker
     {
         public Action UpdateSite;
         private HamSite _site;
+        private Boolean AlwaysDownload = true;
         private readonly string MyStationFilePath;
         public Settings()
         {
@@ -96,7 +97,11 @@ namespace SDRSharp.SatnogsTracker
         }
 
         public Action<HamSite> HamSiteChanged;
-
+        public Action<Boolean> UpdateTle;
+        public void UpdateStatus(String status)
+        {
+            this.labelUpdateStatus.Text = status;
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             //Save Fields to Settings File
@@ -114,6 +119,11 @@ namespace SDRSharp.SatnogsTracker
         {
             //Ignore Changes
             Hide();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            UpdateTle?.Invoke(AlwaysDownload);
         }
     }
 }

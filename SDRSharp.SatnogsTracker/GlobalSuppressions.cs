@@ -32,4 +32,5 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Scope = "member", Target = "SDRSharp.SatnogsTracker.Controlpanel.#SatPC32ServerStart")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Scope = "member", Target = "SDRSharp.SatnogsTracker.Controlpanel.#SatPC32ServerStop")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Scope = "member", Target = "SDRSharp.SatnogsTracker.SatnogsTrackerPlugin.#LoadNoradMappingList()")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Scope = "member", Target = "SDRSharp.SatnogsTracker.Controlpanel.#ShowSettings")]
 
