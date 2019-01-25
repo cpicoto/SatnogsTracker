@@ -1,4 +1,6 @@
 # SDRSharp.SatnogsTracker Changelog
+## 1.5.3
+* Updated Test Packages
 ## 1.5.2
 * Fixed Installation issues on new PC
 * Removed green bars from old passes
