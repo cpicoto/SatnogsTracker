@@ -909,10 +909,7 @@ namespace SDRSharp.SatnogsTracker
                             LogFile.WriteLine("\t      Uplink:[" + trx.UplinkStart + "--" + trx.UplinkEnd + "] Mode:" + trx.UplinkMode + "BandWidth:" + trx.BandwidthHz);
                             LogFile.WriteLine("\tDownlinkFreq:" + trx.DownlinkFreq + "\t\tMode:" + trx.DownlinkMode);
                             LogFile.WriteLine("\tDLinkCorrect:" + trx.DownLinkCorrection);
-                            LogFile.WriteLine("\t  UplinkFreq:" + trx.UplinkFreq + "\t\tMode:" + trx.UplinkMode);
-                            LogFile.WriteLine("\t        Tone:" + trx.Tone + "Hz");
                             LogFile.WriteLine("\t Mode String:" + trx.Modes);
-                            //LogFile.WriteLine("\t  BeaconFreq:" + trx.BeaconFreq + " Mode:" + trx.BeaconMode);
                             LogFile.WriteLine();
                             if (trx.DownlinkFreq != null)
                             {
@@ -1297,64 +1294,10 @@ namespace SDRSharp.SatnogsTracker
                     if ((Descr.IndexOf("Telemetry") != -1) | (Descr.IndexOf("TLM") != -1))
                         sat.Telemetry = true;
 
-
-
-
-
-
-
-                    if (sat.Number == "43188")
-                    {
-                        trx.UplinkStart = trx.UplinkEnd = trx.UplinkFreq;
-                    }
-                    else
-                    {
-                        trx.UplinkStart = t.uplink_low;
-                        if (t.uplink_high != null) trx.UplinkEnd = t.uplink_high;
-                        else trx.UplinkEnd = trx.UplinkStart;
-
-                        if (trx.UplinkStart == trx.UplinkEnd)
-                        {
-                            trx.UplinkMode = "FM";
-                            trx.UplinkFreq = t.uplink_low;
-                        }
-                        else
-                        {
-                            trx.UplinkFreq = ((Convert.ToDouble(trx.UplinkEnd) + Convert.ToDouble(trx.UplinkStart)) / 2).ToString("F0");
-                            trx.UplinkMode = "LSB";
-                        }
-                    }
-                    //Check if this requires Split
-                    if ((trx.UplinkFreq != null) && (trx.DownlinkFreq != null))
-                        if (trx.DownlinkFreq.StartsWith(trx.UplinkFreq.Substring(0, Math.Min(2, trx.UplinkFreq.Length))))
-                        /*&&
-                        (trx.DownlinkFreq.IndexOf(trx.UplinkFreq) == -1)) //Only SPlit if the frequencies are not the same.
-                        */
-                        {
-                            trx.IsSplit = true;
-                            trx.dSplitFreq = (trx.dUplinkFreq - trx.dDownlinkFreq) / 1000;
-                            //Console.WriteLine("Split Frequency Delta is {0}(.000) from Downlink {1} and UpLink {2}",trx.dSplitFreq, trx.dDownlinkFreq, trx.UplinkFreq);
-                        }
-                    /*
-                        else if ((trx.UplinkFreq != null) && (trx.DownlinkFreq != null))
-                            if (trx.DownlinkFreq.IndexOf(trx.UplinkFreq) != -1)
-                                trx.IsDirect = true;
-                                */
-                    //TODO BUG Fix tone
-                    trx.HasTone = true;
+                    trx.HasTone = false;
                     trx.Tone = "67.0";
 
                     if (trx.DownlinkFreq != null) trx.HasDownlink = true;
-                    if (trx.UplinkFreq != null)
-                    {
-                        trx.HasUplink = true;
-                        trx.HasUpLinkDoppler = true;
-                        //40967=AO-85 uses UpLink doppler
-                        //27607=SO-50 Doesn't use Uplink Doppler
-                        if (sat.Number == "40967") trx.HasUpLinkDoppler = true;
-                        else if (sat.Number == "27607") trx.HasUpLinkDoppler = false;
-                    }
-                    else trx.HasUplink = false;
 
                     if (trx.DownlinkEnd == null) trx.DownlinkEnd = trx.DownlinkStart;
                     if (trx.UplinkEnd == null) trx.UplinkEnd = trx.UplinkStart;
@@ -1368,14 +1311,6 @@ namespace SDRSharp.SatnogsTracker
                     else sat.Bands = "Unknown";
                     sat.Channel.Add(trx);
                     if (trx.IsTransponder) sat.IsTransponder = true;
-
-                    if ((sat.Number == "27607") && (trx.FreqLine.StartsWith("Mode V/U"))) //SO-50 Add the 74.4 Actuation Tone 
-                    {
-                        _Transmitter ActivationTrx = new _Transmitter(trx);
-                        ActivationTrx.Tone = "74.4";
-                        ActivationTrx.FreqLine = "74.4hz Activation";
-                        sat.Channel.Add(ActivationTrx);
-                    }
                 }
             }
             reader.Close();
@@ -1761,7 +1696,7 @@ namespace SDRSharp.SatnogsTracker
         public Boolean InSpectrum(float MinFreq, float MaxFreq)
         {
             if (DownlinkFreqWithDoppler == null) return false;
-            if (this.CurrentEL < 0) return false;
+            if (this.CurrentEL < 0.5 ) return false;
             if ((float.Parse(DownlinkFreqWithDoppler) >= MinFreq) && (float.Parse(DownlinkFreqWithDoppler) <= MaxFreq))
                 return true;
             else return false;

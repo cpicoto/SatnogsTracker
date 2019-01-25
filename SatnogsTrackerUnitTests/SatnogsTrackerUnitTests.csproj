@@ -63,6 +63,12 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="Zeptomoby.OrbitTools.Core">
+      <HintPath>..\..\..\..\..\..\sdrsharp-x86\Zeptomoby.OrbitTools.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Zeptomoby.OrbitTools.Orbit">
+      <HintPath>..\..\..\..\..\..\sdrsharp-x86\Zeptomoby.OrbitTools.Orbit.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="UnitTest1.cs" />
@@ -76,12 +82,6 @@
       <Project>{0b7a7c9d-6f70-49d8-a5d9-b63056876229}</Project>
       <Name>SDRSharp.SatnogsTracker</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Newtonsoft.Json.dll" />
-    <Content Include="SDRSharp.SatnogsTracker.dll" />
-    <Content Include="Zeptomoby.OrbitTools.Core.dll" />
-    <Content Include="Zeptomoby.OrbitTools.Orbit.dll" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

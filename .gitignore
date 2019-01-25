@@ -262,3 +262,5 @@ __pycache__/
 /Release
 /Debug
 /SDRSharp.SatnogsTracker/PaintBand.IL
+/Binaries/Debug
+/Binaries/Release

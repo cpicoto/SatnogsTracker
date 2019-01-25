@@ -8,6 +8,7 @@
 
 
 ## Install ##
+* Download SDR Sharp from https://airspy.com/?ddownload=3130
 * Add the Plugin Key to the Plugins.xml file
 	* ```<add key="SatnogsTracker" value="SDRSharp.SatnogsTracker.SatnogsTrackerPlugin,SDRSharp.SatnogsTracker" />``` 
 	* Copy the Binaries to the sdrsharp folder
