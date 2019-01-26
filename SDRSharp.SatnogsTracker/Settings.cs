@@ -98,6 +98,7 @@ namespace SDRSharp.SatnogsTracker
 
         public Action<HamSite> HamSiteChanged;
         public Action<Boolean> UpdateTle;
+        public Action<String> UpdateIP;
         public void UpdateStatus(String status)
         {
             this.labelUpdateStatus.Text = status;
@@ -124,6 +125,11 @@ namespace SDRSharp.SatnogsTracker
         private void button3_Click(object sender, EventArgs e)
         {
             UpdateTle?.Invoke(AlwaysDownload);
+        }
+
+        private void textBox5_TextChanged(object sender, EventArgs e)
+        {
+            UpdateIP?.Invoke(textBox5.Text);
         }
     }
 }

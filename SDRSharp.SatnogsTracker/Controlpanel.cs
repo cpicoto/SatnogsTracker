@@ -272,8 +272,7 @@ namespace SDRSharp.SatnogsTracker
                 {
                     enabled_=true;
                     Console.WriteLine("Checkbox Changed");
-                    SatPC32ServerStart?.Invoke();
-                    
+                    SatPC32ServerStart?.Invoke();                 
                 } else
                 {
                     enabled_ = false;

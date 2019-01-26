@@ -38,6 +38,7 @@ using Zeptomoby.OrbitTools;
 using SDRSharp.PanView;
 using System.Drawing;
 using Newtonsoft.Json;
+using System.Net.Sockets;
 
 namespace SDRSharp.SatnogsTracker
 {
@@ -50,7 +51,11 @@ namespace SDRSharp.SatnogsTracker
         public Boolean CalculateSatVisibilityRunning;
         private readonly RecordingIQProcessor _iqObserver = new RecordingIQProcessor();
         private readonly RecordingAudioProcessor _audioProcessor = new RecordingAudioProcessor();
+        private readonly RecordingAudioProcessor _UDPaudioProcessor = new RecordingAudioProcessor();
         private SimpleRecorder _audioRecorder;
+        private SimpleStreamer _UDPaudioStreamer;
+
+
         private SimpleRecorder _basebandRecorder;
         private readonly WavSampleFormat _wavSampleFormat = WavSampleFormat.PCM16;
         private string _SatElevation;
@@ -74,11 +79,14 @@ namespace SDRSharp.SatnogsTracker
 
             /// Setup Audio Recording
             _audioProcessor.Enabled = false;
+            _UDPaudioProcessor.Enabled = false;
             _iqObserver.Enabled = false;
             control_.RegisterStreamHook(_iqObserver, ProcessorType.RawIQ);
             control_.RegisterStreamHook(_audioProcessor, ProcessorType.DemodulatorOutput);
+            control_.RegisterStreamHook(_UDPaudioProcessor, ProcessorType.DemodulatorOutput);
 
             _audioRecorder = new SimpleRecorder(_audioProcessor);
+            _UDPaudioStreamer = new SimpleStreamer(_UDPaudioProcessor,"10.0.0.193",7355);
             _basebandRecorder = new SimpleRecorder(_iqObserver);
 
             //Instanciate all needed objects
@@ -158,6 +166,9 @@ namespace SDRSharp.SatnogsTracker
             Console.WriteLine("Tracking Initiated");
             //Start Background Doppler Calculations
             ThreadPool.QueueUserWorkItem(CalculateSatVisibility);
+
+            PrepareUDPStreamer();
+            _UDPaudioStreamer.StartStreaming();
         }
 
         private void  UpdateTleData(Boolean alwaysdownload)
@@ -182,6 +193,7 @@ namespace SDRSharp.SatnogsTracker
                 dlg.HamSiteChanged += _controlpanel.ControlPanel_HomeSite_Changed;
                 dlg.UpdateTle += UpdateTleData;
                 UpdateStatus += dlg.UpdateStatus;
+                dlg.UpdateIP +=_UDPaudioStreamer.UpdateIP;
                 dlg.Show();
             }
         }
@@ -229,6 +241,7 @@ namespace SDRSharp.SatnogsTracker
             CalculateSatVisibilityRunning = false;
             StopBaseRecorder();
             StopAFRecorder();
+            StopUDPStreamer();
             satpc32Server_?.Abort();
             LogFile.Close();
         }
@@ -347,6 +360,7 @@ namespace SDRSharp.SatnogsTracker
                     {
                         if (_basebandRecorder.IsRecording) StopBaseRecorder();
                         if (_audioRecorder.IsRecording) StopAFRecorder();
+                        //if (_UDPaudioStreamer.IsStreaming) StopUDPStreamer();
                     }
                 }
             }
@@ -447,6 +461,7 @@ namespace SDRSharp.SatnogsTracker
                     {
                         PrepareAFRecorder();
                         _audioRecorder.StartRecording();
+
                     }
                 }
                 catch
@@ -474,6 +489,15 @@ namespace SDRSharp.SatnogsTracker
             _audioRecorder.FileName = RecordingLocation() + "\\" + AudioRecordingName;
             _audioRecorder.Format = _wavSampleFormat;
         }
+
+        private void PrepareUDPStreamer()
+        {
+            DateTime startTime = DateTime.UtcNow;
+            _UDPaudioStreamer.SampleRate = _audioProcessor.SampleRate;
+            String AudioRecordingName = startTime.ToString(@"yyyy-MM-ddTHH-mm.ffffff") + "_" + SatelliteName + "_" + SatelliteID + "_STREAM.wav";
+            _UDPaudioStreamer.FileName = RecordingLocation() + "\\" + AudioRecordingName;
+            _UDPaudioStreamer.Format = _wavSampleFormat;
+        }
         private void StopBaseRecorder()
         {
             if (_basebandRecorder.IsRecording) _basebandRecorder.StopRecording();
@@ -481,6 +505,11 @@ namespace SDRSharp.SatnogsTracker
         private void StopAFRecorder()
         {
             if (_audioRecorder.IsRecording) _audioRecorder.StopRecording();
+        }
+
+        private void StopUDPStreamer()
+        {
+            if (_UDPaudioStreamer.IsStreaming) _UDPaudioStreamer.StopStreaming();
         }
 
         private void SDRSharp_WaterFallCustomPaint(object sender, CustomPaintEventArgs e)
@@ -1960,5 +1989,364 @@ namespace SDRSharp.SatnogsTracker
     }
     #endregion
 
-    
+    public enum RecordingMode
+    {
+        Baseband,
+        Audio
+    }
+
+    public unsafe class SimpleStreamer : IDisposable
+    {
+        private const int DefaultAudioGain = 30;
+
+        private static readonly int _bufferCount = Utils.GetIntSetting("RecordingBufferCount", 8);
+        private readonly float _audioGain = (float)Math.Pow(DefaultAudioGain / 10.0, 10);
+
+        private readonly SharpEvent _bufferEvent = new SharpEvent(false);
+
+        private readonly UnsafeBuffer[] _circularBuffers = new UnsafeBuffer[_bufferCount];
+        private readonly Complex*[] _complexCircularBufferPtrs = new Complex*[_bufferCount];
+        private readonly float*[] _floatCircularBufferPtrs = new float*[_bufferCount];
+
+        private int _circularBufferTail;
+        private int _circularBufferHead;
+        private int _circularBufferLength;
+        private volatile int _circularBufferUsedCount;
+
+        private long _skippedBuffersCount;
+        private bool _diskWriterRunning;
+        private string _fileName;
+        private double _sampleRate;
+
+        private WavSampleFormat _wavSampleFormat;
+        private SimpleWavWriter _wavWriter;
+        private Thread _diskWriter;
+
+        private readonly RecordingMode _recordingMode;
+        //private readonly RecordingIQObserver _iQObserver;
+        private readonly RecordingAudioProcessor _audioProcessor;
+        private byte[] msgBuffer = new byte[40000];
+        public bool IsStreaming
+        {
+            get { return _diskWriterRunning; }
+        }
+
+        public bool IsStreamFull
+        {
+            get { return _wavWriter == null ? false : _wavWriter.IsStreamFull; }
+        }
+
+        public long BytesWritten
+        {
+            get { return _wavWriter == null ? 0L : _wavWriter.Length; }
+        }
+
+        public long SkippedBuffers
+        {
+            get { return _wavWriter == null ? 0L : _skippedBuffersCount; }
+        }
+
+        public RecordingMode Mode
+        {
+            get { return _recordingMode; }
+        }
+
+        public WavSampleFormat Format
+        {
+            get { return _wavSampleFormat; }
+            set
+            {
+                if (_diskWriterRunning)
+                {
+                    throw new ArgumentException("Format cannot be set while recording");
+                }
+                _wavSampleFormat = value;
+            }
+        }
+
+        public double SampleRate
+        {
+            get { return _sampleRate; }
+            set
+            {
+                if (_diskWriterRunning)
+                {
+                    throw new ArgumentException("SampleRate cannot be set while recording");
+                }
+
+                _sampleRate = value;
+            }
+        }
+
+        public string FileName
+        {
+            get { return _fileName; }
+            set
+            {
+                if (_diskWriterRunning)
+                {
+                    throw new ArgumentException("FileName cannot be set while recording");
+                }
+                _fileName = value;
+            }
+        }
+
+        #region Initialization and Termination
+        private UdpClient _udpClient;
+        private IPEndPoint _udpEP;
+        private int _port;
+
+        public SimpleStreamer(RecordingAudioProcessor audioProcessor,String Host, int Port)
+        {
+            _audioProcessor = audioProcessor;
+            _recordingMode = RecordingMode.Audio;
+            _udpClient = new UdpClient();
+            _port = Port;
+            _udpEP = new IPEndPoint(IPAddress.Parse(Host), Port); // endpoint where server is listening
+            //_udpClient.Connect(_udpEP);
+        }
+
+        ~SimpleStreamer()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            FreeBuffers();
+        }
+
+        #endregion
+
+        #region IQ Event Handler
+
+        public void IQSamplesIn(Complex* buffer, int length)
+        {
+
+            #region Buffers
+
+            if (_circularBufferLength != length)
+            {
+                FreeBuffers();
+                CreateBuffers(length);
+
+                _circularBufferTail = 0;
+                _circularBufferHead = 0;
+            }
+
+            #endregion
+
+            if (_circularBufferUsedCount == _bufferCount)
+            {
+                _skippedBuffersCount++;
+                return;
+            }
+
+            Utils.Memcpy(_complexCircularBufferPtrs[_circularBufferHead], buffer, length * sizeof(Complex));
+            _circularBufferHead++;
+            _circularBufferHead &= (_bufferCount - 1);
+            _circularBufferUsedCount++;
+            _bufferEvent.Set();
+        }
+
+        #endregion
+
+        #region Audio Event / Scaling
+
+        public void AudioSamplesIn(float* audio, int length)
+        {
+            #region Buffers
+
+            var sampleCount = length / 2;
+            if (_circularBufferLength != sampleCount)
+            {
+                FreeBuffers();
+                CreateBuffers(sampleCount);
+
+                _circularBufferTail = 0;
+                _circularBufferHead = 0;
+            }
+
+            #endregion
+
+            if (_circularBufferUsedCount == _bufferCount)
+            {
+                _skippedBuffersCount++;
+                return;
+            }
+
+            Utils.Memcpy(_floatCircularBufferPtrs[_circularBufferHead], audio, length * sizeof(float));
+            _circularBufferHead++;
+            _circularBufferHead &= (_bufferCount - 1);
+            _circularBufferUsedCount++;
+            _bufferEvent.Set();
+        }
+
+        public void ScaleAudio(float* audio, int length)
+        {
+            for (var i = 0; i < length; i++)
+            {
+                audio[i] *= _audioGain;
+            }
+        }
+
+        #endregion
+
+        #region Worker Thread
+
+        private void DiskWriterThread()
+        {
+            if (_recordingMode == RecordingMode.Audio)
+            {
+                _audioProcessor.AudioReady += AudioSamplesIn;
+                _audioProcessor.Enabled = true;
+            }
+
+            while (_diskWriterRunning)// && !_wavWriter.IsStreamFull)
+            {
+                if (_circularBufferTail == _circularBufferHead)
+                {
+                    _bufferEvent.WaitOne();
+                }
+
+                if (_diskWriterRunning && _circularBufferTail != _circularBufferHead)
+                {
+                    if (_recordingMode == RecordingMode.Audio)
+                    {
+                        ScaleAudio(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length * 2);
+                    }
+                    //byte []bytes = new byte[_circularBuffers[_circularBufferTail].Length * 2];
+                    byte[] msg = new byte[40000];
+                    int counter = 0;
+                    for (int i = 0; i < _circularBuffers[_circularBufferTail].Length * 2; i++)
+                    {
+                        byte[] bytes = BitConverter.GetBytes(_floatCircularBufferPtrs[_circularBufferTail][i]);// _floatCircularBufferPtrs[_circularBufferTail][i];
+                        System.Buffer.BlockCopy(bytes, 0, msgBuffer, counter, bytes.Length);
+                        counter += bytes.Length;
+                    }
+                        //bytes[i] = (byte)_floatCircularBufferPtrs[_circularBufferTail][i];
+                        try
+                        {
+                            //_udpClient.Send(sendBytes, sendBytes.Length, _udpEP);
+                            _udpClient.Send(msgBuffer, counter, _udpEP);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+                        }
+                    
+                        
+                        //_wavWriter.Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length);
+                    //int val=
+                    //Byte[] sendBytes = Encoding.ASCII.GetBytes("Is anybody there?");
+
+                    _circularBufferUsedCount--;
+                    _circularBufferTail++;
+                    _circularBufferTail &= (_bufferCount - 1);
+                }
+            }
+
+            while (_circularBufferTail != _circularBufferHead)
+            {
+                if (_floatCircularBufferPtrs[_circularBufferTail] != null)
+                {
+                    //_wavWriter.Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length);
+                }
+                _circularBufferTail++;
+                _circularBufferTail &= (_bufferCount - 1);
+            }
+
+            if (_recordingMode == RecordingMode.Audio)
+            { 
+                _audioProcessor.Enabled = false;
+                _audioProcessor.AudioReady -= AudioSamplesIn;
+            }
+
+            _diskWriterRunning = false;
+        }
+
+        private void Flush()
+        {
+            if (_wavWriter != null)
+            {
+                //_wavWriter.Close();
+            }
+        }
+
+        private void CreateBuffers(int size)
+        {
+            for (var i = 0; i < _bufferCount; i++)
+            {
+                _circularBuffers[i] = UnsafeBuffer.Create(size, sizeof(Complex));
+                _complexCircularBufferPtrs[i] = (Complex*)_circularBuffers[i];
+                _floatCircularBufferPtrs[i] = (float*)_circularBuffers[i];
+            }
+
+            _circularBufferLength = size;
+        }
+
+        private void FreeBuffers()
+        {
+            _circularBufferLength = 0;
+            for (var i = 0; i < _bufferCount; i++)
+            {
+                if (_circularBuffers[i] != null)
+                {
+                    _circularBuffers[i].Dispose();
+                    _circularBuffers[i] = null;
+                    _complexCircularBufferPtrs[i] = null;
+                    _floatCircularBufferPtrs[i] = null;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void StartStreaming()
+        {
+            if (_diskWriter == null)
+            {
+                _circularBufferHead = 0;
+                _circularBufferTail = 0;
+
+                _skippedBuffersCount = 0;
+
+                _bufferEvent.Reset();
+
+                //_wavWriter = new SimpleWavWriter(_fileName, _wavSampleFormat, (uint)_sampleRate);
+                //_wavWriter.Open();
+
+                _diskWriter = new Thread(DiskWriterThread);
+
+                _diskWriterRunning = true;
+                _diskWriter.Start();
+            }
+        }
+
+        public void StopStreaming()
+        {
+            _diskWriterRunning = false;
+
+            if (_diskWriter != null)
+            {
+                _bufferEvent.Set();
+                _diskWriter.Join();
+            }
+
+            Flush();
+            FreeBuffers();
+
+            _diskWriter = null;
+            _wavWriter = null;
+        }
+
+        internal void UpdateIP(string NewIP)
+        {
+            _udpEP = new IPEndPoint(IPAddress.Parse(NewIP), _port);
+        }
+
+        #endregion
+    }
 }

@@ -294,6 +294,7 @@ namespace SDRSharp.SatnogsTracker
         {
             string[] words = Input.Split(' ');
             String SatMA;
+            Boolean _recording = false;
             foreach (string word in words)
             {
                 if (word.StartsWith("SN"))
@@ -327,20 +328,32 @@ namespace SDRSharp.SatnogsTracker
                 else if (word.StartsWith("RB"))
                 {
                     if (word.Substring(2, word.Length - 2).ToLower().StartsWith("yes"))
+                    {
                         SatRecordBase = true;
+                        _recording = true;
+                    }
                     else
                         SatRecordBase = false;
                 }
                 else if (word.StartsWith("RA"))
                 {
                     if (word.Substring(2, word.Length - 2).ToLower().StartsWith("yes"))
+                    {
                         SatRecordAF = true;
+                        _recording = true;
+                    }
                     else
                         SatRecordAF = false;
                 }
                 else if (word.StartsWith("MA"))
                 {
                     SatMA = word.Remove(0, 2);
+                    if (!_recording)
+                    {
+                        SatRecordAF = false;
+                        SatRecordBase = false;
+                    }
+
                 }
                 else if (word.StartsWith("** NO SATELLITE **"))
                 {
