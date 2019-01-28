@@ -226,7 +226,7 @@ namespace SDRSharp.SatnogsTracker
             this.textBox5.Name = "textBox5";
             this.textBox5.Size = new System.Drawing.Size(206, 38);
             this.textBox5.TabIndex = 17;
-            this.textBox5.Text = "10.0.0.193";
+            this.textBox5.Text = "10.0.0.31";
             this.textBox5.TextChanged += new System.EventHandler(this.textBox5_TextChanged);
             // 
             // Settings

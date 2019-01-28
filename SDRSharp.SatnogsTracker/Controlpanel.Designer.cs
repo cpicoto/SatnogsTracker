@@ -70,9 +70,9 @@ namespace SDRSharp.SatnogsTracker
             this.labelDescSatnogsID = new System.Windows.Forms.Label();
             this.labelSatNogsID = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.labelGrid = new System.Windows.Forms.Label();
             this.checkBoxRecordAF = new System.Windows.Forms.CheckBox();
             this.btSettings = new System.Windows.Forms.Button();
-            this.labelGrid = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -288,6 +288,17 @@ namespace SDRSharp.SatnogsTracker
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             // 
+            // labelGrid
+            // 
+            this.labelGrid.AutoSize = true;
+            this.labelGrid.Location = new System.Drawing.Point(160, 444);
+            this.labelGrid.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.labelGrid.Name = "labelGrid";
+            this.labelGrid.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.labelGrid.Size = new System.Drawing.Size(48, 25);
+            this.labelGrid.TabIndex = 30;
+            this.labelGrid.Text = "grid";
+            // 
             // checkBoxRecordAF
             // 
             this.checkBoxRecordAF.AutoSize = true;
@@ -300,6 +311,7 @@ namespace SDRSharp.SatnogsTracker
             this.checkBoxRecordAF.Text = "Record AF";
             this.checkBoxRecordAF.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.checkBoxRecordAF.UseVisualStyleBackColor = true;
+            this.checkBoxRecordAF.CheckedChanged += new System.EventHandler(this.checkBoxRecordAF_CheckedChanged);
             // 
             // btSettings
             // 
@@ -310,17 +322,6 @@ namespace SDRSharp.SatnogsTracker
             this.btSettings.Text = "Settings";
             this.btSettings.UseVisualStyleBackColor = true;
             this.btSettings.Click += new System.EventHandler(this.btSettings_Click);
-            // 
-            // labelGrid
-            // 
-            this.labelGrid.AutoSize = true;
-            this.labelGrid.Location = new System.Drawing.Point(160, 444);
-            this.labelGrid.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this.labelGrid.Name = "labelGrid";
-            this.labelGrid.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.labelGrid.Size = new System.Drawing.Size(48, 25);
-            this.labelGrid.TabIndex = 30;
-            this.labelGrid.Text = "grid";
             // 
             // Controlpanel
             // 
