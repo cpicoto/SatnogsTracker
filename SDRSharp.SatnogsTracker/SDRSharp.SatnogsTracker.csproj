@@ -40,7 +40,6 @@
     </Reference>
     <Reference Include="NDde, Version=2.1.563.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NDde.2.01.0563\lib\NDde.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -108,16 +107,19 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NDde.xml" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="LICENSE" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="NDde.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\$(ConfigurationName)
+    <PostBuildEvent>md $(SolutionDir)\Binaries\
+md $(SolutionDir)\Binaries\$(ConfigurationName)
+copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\$(ConfigurationName)
 copy $(TargetDir)$(TargetFileName) C:\sdrsharp-x86
-copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\Binaries\$(ConfigurationName)</PostBuildEvent>
+copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\Binaries\$(ConfigurationName)
+copy $(TargetDir)\*.*  C:\sdrsharp-x86</PostBuildEvent>
   </PropertyGroup>
 </Project>
