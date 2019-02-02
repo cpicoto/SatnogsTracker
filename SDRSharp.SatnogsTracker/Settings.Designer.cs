@@ -67,6 +67,8 @@ namespace SDRSharp.SatnogsTracker
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.button3 = new System.Windows.Forms.Button();
             this.labelUpdateStatus = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textBox5 = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // labelCallsign
@@ -112,7 +114,7 @@ namespace SDRSharp.SatnogsTracker
             // button1
             // 
             this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button1.Location = new System.Drawing.Point(96, 326);
+            this.button1.Location = new System.Drawing.Point(96, 422);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(134, 58);
             this.button1.TabIndex = 6;
@@ -123,7 +125,7 @@ namespace SDRSharp.SatnogsTracker
             // button2
             // 
             this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button2.Location = new System.Drawing.Point(240, 326);
+            this.button2.Location = new System.Drawing.Point(240, 422);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(146, 58);
             this.button2.TabIndex = 7;
@@ -189,7 +191,7 @@ namespace SDRSharp.SatnogsTracker
             // button3
             // 
             this.button3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button3.Location = new System.Drawing.Point(96, 402);
+            this.button3.Location = new System.Drawing.Point(96, 498);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(290, 54);
             this.button3.TabIndex = 14;
@@ -201,17 +203,39 @@ namespace SDRSharp.SatnogsTracker
             // 
             this.labelUpdateStatus.AutoSize = true;
             this.labelUpdateStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelUpdateStatus.Location = new System.Drawing.Point(184, 478);
+            this.labelUpdateStatus.Location = new System.Drawing.Point(184, 574);
             this.labelUpdateStatus.Name = "labelUpdateStatus";
-            this.labelUpdateStatus.Size = new System.Drawing.Size(0, 51);
-            this.labelUpdateStatus.Text = "Ready";
+            this.labelUpdateStatus.Size = new System.Drawing.Size(93, 31);
             this.labelUpdateStatus.TabIndex = 15;
+            this.labelUpdateStatus.Text = "Ready";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(49, 345);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(108, 31);
+            this.label2.TabIndex = 16;
+            this.label2.Text = "GRC IP";
+            // 
+            // textBox5
+            // 
+            this.textBox5.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBox5.Location = new System.Drawing.Point(180, 338);
+            this.textBox5.Name = "textBox5";
+            this.textBox5.Size = new System.Drawing.Size(206, 38);
+            this.textBox5.TabIndex = 17;
+            this.textBox5.Text = "10.0.0.31";
+            this.textBox5.TextChanged += new System.EventHandler(this.textBox5_TextChanged);
             // 
             // Settings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(474, 539);
+            this.ClientSize = new System.Drawing.Size(474, 637);
+            this.Controls.Add(this.textBox5);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.labelUpdateStatus);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.comboBox1);
@@ -248,5 +272,7 @@ namespace SDRSharp.SatnogsTracker
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Label labelUpdateStatus;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox textBox5;
     }
 }

@@ -36,6 +36,7 @@ namespace SDRSharp.SatnogsTracker
         public event Action SatPC32ServerStart;
         public event Action SatPC32ServerStop;
         public event Action ShowSettings;
+        public Action<Boolean> StartRecordingAF;
         //public Settings dlg = new Settings();
         public Controlpanel()
         {
@@ -272,8 +273,7 @@ namespace SDRSharp.SatnogsTracker
                 {
                     enabled_=true;
                     Console.WriteLine("Checkbox Changed");
-                    SatPC32ServerStart?.Invoke();
-                    
+                    SatPC32ServerStart?.Invoke();                 
                 } else
                 {
                     enabled_ = false;
@@ -292,5 +292,11 @@ namespace SDRSharp.SatnogsTracker
             ShowSettings?.Invoke();
         }
 
+        private void checkBoxRecordAF_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxRecordAF.Checked) StartRecordingAF?.Invoke(true);
+            else StartRecordingAF?.Invoke(false);
+
+        }
     }
 }

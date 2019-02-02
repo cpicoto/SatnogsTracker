@@ -1,6 +1,8 @@
-# SDRSharp.SatnogsTracker Changelog
+
 ## 1.5.3
-* Updated Test Packages
+* Resample Audio Stream to 48Khz using Naudio
+* Will stream for AF recordings.
+* Switch to celestrak amateur.txt for now
 ## 1.5.2
 * Fixed Installation issues on new PC
 * Removed green bars from old passes
