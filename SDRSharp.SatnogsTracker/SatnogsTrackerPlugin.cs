@@ -40,6 +40,8 @@ using System.Drawing;
 using Newtonsoft.Json;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using NAudio.Wave;
+using NAudio.Wave.Compression;
 
 namespace SDRSharp.SatnogsTracker
 {
@@ -170,8 +172,7 @@ namespace SDRSharp.SatnogsTracker
             //Start Background Doppler Calculations
             ThreadPool.QueueUserWorkItem(CalculateSatVisibility);
 
-            PrepareUDPStreamer();
-            _UDPaudioStreamer.StartStreaming();
+
         }
 
         private void  UpdateTleData(Boolean alwaysdownload)
@@ -325,8 +326,8 @@ namespace SDRSharp.SatnogsTracker
             //
             //http://www.celestrak.com/NORAD/elements/amateur.txt
             // DK3WN has a better amateur.txt file
-            //
-            GetFile("http://www.dk3wn.info/tle/amateur.txt", "amateur.txt", alwaysdownload);
+            //http://www.dk3wn.info/tle/amateur.txt
+            GetFile("http://www.celestrak.com/NORAD/elements/amateur.txt", "amateur.txt", alwaysdownload);
             LoadTxtKeps("amateur.txt");
 
             GetFile("http://www.celestrak.com/NORAD/elements/active.txt", "active.txt", alwaysdownload);
@@ -465,6 +466,8 @@ namespace SDRSharp.SatnogsTracker
                         PrepareAFRecorder();
                         _audioRecorder.StartRecording();
 
+                        PrepareUDPStreamer();
+                        _UDPaudioStreamer.StartStreaming();
                     }
                 }
                 catch
@@ -2212,7 +2215,7 @@ namespace SDRSharp.SatnogsTracker
         #endregion
 
         #region Worker Thread
-
+        public AcmStream resampleStream;
         private void DiskWriterThread()
         {
             if (_recordingMode == RecordingMode.Audio)
@@ -2220,7 +2223,9 @@ namespace SDRSharp.SatnogsTracker
                 _audioProcessor.AudioReady += AudioSamplesIn;
                 _audioProcessor.Enabled = true;
             }
-
+            int input_rate = (int)_sampleRate;
+            resampleStream = new AcmStream(new WaveFormat(input_rate, 16, 1), new WaveFormat(48000, 16, 1));
+            
             while (_diskWriterRunning)// && !_wavWriter.IsStreamFull)
             {
                 if (_circularBufferTail == _circularBufferHead)
@@ -2232,7 +2237,7 @@ namespace SDRSharp.SatnogsTracker
                 {
                     if (_recordingMode == RecordingMode.Audio)
                     {
-                        ScaleAudio(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length * 2);
+                       ScaleAudio(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length * 2);
                     }
                     //byte []bytes = new byte[_circularBuffers[_circularBufferTail].Length * 2];
 
@@ -2349,43 +2354,46 @@ namespace SDRSharp.SatnogsTracker
 
         private void WritePCM16(float* data, int length)
         {
-            #region Buffer
-
             if (_outputBuffer == null || _outputBuffer.Length != (length * sizeof(Int16)))
             {
                 _outputBuffer = null;
                 _outputBuffer = new byte[length * sizeof(Int16)];
             }
-
-            #endregion
-
-            var ptr = data;
-            int counter = 0;
-            int startpacket = 0;
-            byte[] packet = new byte[1792];
+            var ptr = data;           
             for (var i = 0; i < length; i++)
             {
-
                 var leftChannel = (Int16)(*ptr++ * 32767.0f);
                 var rightChannel = (Int16)(*ptr++ * 32767.0f);
                 _outputBuffer[(i * 2)] = (byte)(leftChannel & 0x00ff);
                 _outputBuffer[(i * 2) + 1] = (byte)(leftChannel >> 8);
-                packet[counter] = _outputBuffer[(i * 2)];
-                packet[counter+1]= _outputBuffer[(i * 2)+1];
-                counter += 2;
-                if (counter==1792)
+            }
+            int buffer_length = length * sizeof(Int16);
+            System.Buffer.BlockCopy(_outputBuffer,0,resampleStream.SourceBuffer,0,buffer_length);
+            int sourceBytesConverted = 0;
+            
+            var convertedBytes = resampleStream.Convert(buffer_length, out sourceBytesConverted);
+            if (sourceBytesConverted != buffer_length)
+            {
+                Console.WriteLine("We didn't convert everything {0} bytes in, {1} bytes converted");
+            }
+            var converted = new byte[convertedBytes];
+            System.Buffer.BlockCopy(resampleStream.DestBuffer, 0, converted, 0, convertedBytes);
+            int counter = 0;
+            byte[] packet = new byte[1471];
+            for (var i=0; i< convertedBytes; i++)
+            {
+                
+                if (counter == 1471)
                 {
                     _udpClient.Send(packet, counter, _udpEP);
                     counter = 0;
                 }
-                //_outputBuffer[(i * 4) + 2] = (byte)(rightChannel & 0x00ff);
-                //_outputBuffer[(i * 4) + 3] = (byte)(rightChannel >> 8);
+                packet[counter] = converted[i];
+                counter++;
             }
-            if (counter>0)
+            if (counter > 0)
             {
-                byte[] final_packet = new byte[counter];
-                System.Buffer.BlockCopy(packet, 0, final_packet, 0, counter);
-                _udpClient.Send(final_packet, counter, _udpEP);
+                _udpClient.Send(packet, counter, _udpEP);
             }
         }
 
