@@ -34,7 +34,7 @@
 
 	* Configuration and Logs
 		* MyStation.json created on first run or anytime settings are changed, can be edited manually or from the plugin
-			* ```{"Callsign":"your callsign>","Latitude":"Value between -90.000 and 90.0000","Longitude":"Value Between -180.0000a and 180.0000","Altitude":" (inKms) Value between 0.000 and 0.300","DDEApp":"Value is either Orbitron or SatPC32 or WxTrack"}```
+			* ```{"Callsign":"your callsign","Latitude":"Value between -90.000 and 90.0000","Longitude":"Value Between -180.0000a and 180.0000","Altitude":" (inKms) Value between 0.000 and 0.300","DDEApp":"Value is either Orbitron or SatPC32 or WxTrack"}```
 		* SatNOGsMapping.json: File with temporary mappings from SatNOG IDS 999?? to norad tracking IDs, can be edited manually.
 			* ```[{"SatNOGsID":"99911","TrackingID":"43770"},{"SatNOGsID":"99912","TrackingID":"43792"}]```
 		* SatnogsTracker_logfile.txt created every time SDR launchs for debug purposes
@@ -45,6 +45,48 @@
 			* 2019-01-03T21-50.202238_JAS-2-(FO-29)_24278_AF.wav
 			* 2019-01-03T22-21.016427_JAS-2-(FO-29)_24278_AF.wav
 
+
+## How to setup gr-satellites to decode telemetry from SatnogsTracker using Windows Subsystem for Linux (WSL)
+* On Windows 10, go the Windows Store and download the Debian GNU/Linux for WSL
+* Configure WSL following these instructions https://docs.microsoft.com/en-us/windows/wsl/install-win10
+* Launch Debian after configuring WSL
+	* Edit /etc/apt/sources.list
+	* Insert this new line at the top ```deb http://ftp.us.debian.org/debian sid main```
+	* ```
+		sudo apt update
+		sudo apt upgrade  --> This will take sometime
+	    sudo apt install make cmake git xterm python-pip synaptic swig doxygen direwolf
+		pip install construct requests
+	    sudo synaptic```
+	* Select gnuradio and gnuradio-dev >= 3.7.13.4 and apply changes to Install
+	```
+	cd ~
+	git clone https://github.com/daniestevez/gr-satellites
+	git clone https://github.com/daniestevez/gr-kiss
+	git clone https://github.com/daniestevez/libfec
+	cd libfec
+	./configure
+	make
+	sudo make install
+	cd ..
+	cd gr-kiss
+	mkdir build
+	cd build
+	cmake ..
+	make
+	sudo make install
+	cd ../..
+	cd gr-satellites
+	mkdir build
+	cd build
+	cmake ..
+	make
+	sudo make install
+	sudo ldconfig
+	cd ..
+	./compile_hierarchical.sh
+	```
+
 ## Credits and References
 * OrbitTools Library - Public Edition - Copyright © 2003-2017 Michael F. Henry - http://zeptomoby.com/satellites/index.htm
 * Doppler calculations based on Predict formulas from KD2BD https://www.qsl.net/kd2bd/index.html
@@ -53,4 +95,4 @@
 * Satnogs.Tracker can interface with Orbitron - Satellite Tracking System (C) 2001-2005 by Sebastian Stoff  http://www.stoff.pl/
 * Satnogs.Tracker can interface with SatPC32 by Erich Eichmann, DK1TB http://www.dk1tb.de/indexeng.htm
 * Satnogs.Tracker can interface with Wxtrack by David Taylor http://www.satsignal.eu/software/wxtrack.htm
- 
+* gr-satellites by Dani Estevez available at https://github.com/daniestevez/gr-satellites

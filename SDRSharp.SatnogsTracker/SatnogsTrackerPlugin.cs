@@ -1915,6 +1915,7 @@ namespace SDRSharp.SatnogsTracker
             Longitude = inLongitude;
             Altitude = inAltitude;
             DDEApp = inDDEApp;
+            GRIP = "127.0.0.1";
 
             //_homeSite = new Site(double.Parse(Latitude), double.Parse(Longitude), double.Parse(Altitude), Callsign);          
         }
@@ -1923,12 +1924,13 @@ namespace SDRSharp.SatnogsTracker
         public String Longitude { get; set; }
         public String Altitude { get; set; }
         public String DDEApp { get; set; }
+        public string GRIP { get; set; }
         /*
-         * public Site HomeSite
-        {
-            get { return _homeSite; }
-        }
-        */
+* public Site HomeSite
+{
+get { return _homeSite; }
+}
+*/
     }
 
     //List<SpectrumColumn> ActiveFrequencies = new List<SpectrumColumn>();
@@ -2141,9 +2143,10 @@ namespace SDRSharp.SatnogsTracker
 
         public void ScaleAudio(float* audio, int length)
         {
+            float Gain = _audioGain/200;
             for (var i = 0; i < length; i++)
             {
-                audio[i] *= _audioGain;
+                audio[i] *= Gain; //_audioGain;
             }
         }
 
@@ -2174,35 +2177,8 @@ namespace SDRSharp.SatnogsTracker
                     {
                        ScaleAudio(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length * 2);
                     }
-                    //byte []bytes = new byte[_circularBuffers[_circularBufferTail].Length * 2];
-
-                    /*
-                    int counter = 0;
-                    for (int i = 0; i < _circularBuffers[_circularBufferTail].Length * 2; i++)
-                    {
-                        byte[] bytes = BitConverter.GetBytes(_floatCircularBufferPtrs[_circularBufferTail][i]);// _floatCircularBufferPtrs[_circularBufferTail][i];
-                        System.Buffer.BlockCopy(bytes, 0, msgBuffer, counter, bytes.Length);
-                        counter += bytes.Length;
-                        if (counter>3000)
-                        {
-                            try
-                            {
-                                //_udpClient.Send(sendBytes, sendBytes.Length, _udpEP);
-                                _udpClient.Send(msgBuffer, counter, _udpEP);
-
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e.ToString());
-                            }
-                            counter = 0;
-                        }
-                    }
-                        //bytes[i] = (byte)_floatCircularBufferPtrs[_circularBufferTail][i];
-
-                    */
-                        
-                     Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length);
+                       
+                     Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length * 2); //*2 ??? 
 
                     _circularBufferUsedCount--;
                     _circularBufferTail++;
@@ -2214,7 +2190,7 @@ namespace SDRSharp.SatnogsTracker
             {
                 if (_floatCircularBufferPtrs[_circularBufferTail] != null)
                 {
-                    //_wavWriter.Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length);
+                    Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length*2);
                 }
                 _circularBufferTail++;
                 _circularBufferTail &= (_bufferCount - 1);
@@ -2234,12 +2210,6 @@ namespace SDRSharp.SatnogsTracker
 
             if (_udpClient != null)
             {
-
-                //if (_isStreamFull)
-                //{
-                //    throw new InvalidOperationException("Stream full");
-                //}
-
                 switch (_wavSampleFormat)
                 {
                     case WavSampleFormat.PCM8:
@@ -2278,10 +2248,7 @@ namespace SDRSharp.SatnogsTracker
             for (var i = 0; i < length; i++)
             {
                 _outputBuffer[i]=(byte)((*ptr++ * 127.0f) + 128);
-                /*
-                _outputBuffer[(i * 2)] = (byte)((*ptr++ * 127.0f) + 128);
-                _outputBuffer[(i * 2) + 1] = (byte)((*ptr++ * 127.0f) + 128);
-                */
+                ptr++;
             }
 
             WriteStream(_outputBuffer);
@@ -2314,21 +2281,29 @@ namespace SDRSharp.SatnogsTracker
             var converted = new byte[convertedBytes];
             System.Buffer.BlockCopy(resampleStream.DestBuffer, 0, converted, 0, convertedBytes);
             int counter = 0;
-            byte[] packet = new byte[1471];
+            const int MAX_PAYLOAD = 1472;
+            byte[] packet = new byte[MAX_PAYLOAD];
+            Boolean AllZero=true;
             for (var i=0; i< convertedBytes; i++)
-            {
-                
-                if (counter == 1471)
+            {                
+                if (counter == MAX_PAYLOAD)
                 {
-                    _udpClient.Send(packet, counter, _udpEP);
+                    if (!AllZero)
+                        _udpClient.Send(packet, counter, _udpEP);
+                    //Thread.Sleep(50);
+                    //packet = null;
+                    packet = new byte[MAX_PAYLOAD];
                     counter = 0;
+                    AllZero = true;
                 }
                 packet[counter] = converted[i];
+                if (packet[counter] != 0) AllZero = false;
                 counter++;
             }
-            if (counter > 0)
+            if (counter > 1)
             {
-                _udpClient.Send(packet, counter, _udpEP);
+                if (!AllZero)
+                    _udpClient.Send(packet, counter-1, _udpEP);
             }
         }
 

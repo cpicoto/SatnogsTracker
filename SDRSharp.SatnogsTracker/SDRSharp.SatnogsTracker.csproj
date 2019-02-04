@@ -112,6 +112,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="NDde.xml" />
+    <Content Include="satellite-recordings\2019-02-04T04-36.486502_TIGRISAT_40043_IQ.wav" />
+    <Content Include="satellite-recordings\TIGRISAT.WAV" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -1,4 +1,10 @@
 
+## 1.6.0
+* UDP streaming working with gr-satellites/apps/generic_9k6_fsk_ax25.grc verified with tigrisat IQ playback
+* Added satellite-recordings folder with:
+	* 2019-02-04T04-36.486502_TIGRISAT_40043_IQ.wav : IQ file that can be played in SDR and decode 9k6 packets in WSL
+	* 2TIGRISAT.WAV  : 48Khz AF file from the same IQ file
+* Use: direwolf.exe -r 48000 -B 9600 -dp -a 10 -n 1 UDP:7355 to validate UDP streaming is working on windows.
 ## 1.5.3
 * Resample Audio Stream to 48Khz using Naudio
 * Will stream for AF recordings.

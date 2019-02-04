@@ -91,6 +91,7 @@ namespace SDRSharp.SatnogsTracker
                 textBox3.Text = _site.Longitude;
                 textBox4.Text = _site.Altitude;
                 comboBox1.Text = _site.DDEApp;
+                textBox5.Text = _site.GRIP;
                 HamSiteChanged?.Invoke(_site);
 
             }
