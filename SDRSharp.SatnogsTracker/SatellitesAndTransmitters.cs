@@ -107,7 +107,7 @@ namespace SDRSharp.SatnogsTracker
                     if (float.Parse(value) <= 0)
                     {
                         if (_basebandRecorder.IsRecording) StopBaseRecorder();
-                        if (_audioRecorder.IsRecording) StopAFRecorder();
+                        if (_AFRecorder.IsRecording) StopAFRecorder();
                         if (_UDPaudioStreamer.IsStreaming) StopUDPStreamer();
                     }
                 }

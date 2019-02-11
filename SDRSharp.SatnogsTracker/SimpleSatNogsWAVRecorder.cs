@@ -47,41 +47,61 @@ namespace SDRSharp.SatnogsTracker
 {
     public partial class SatnogsTrackerPlugin : ISharpPlugin
     {
-        private void SDRSharp_StreamerChanged(Boolean StreamAF)
-        {
-            if (StreamAF && !_UDPaudioStreamer.IsStreaming)
-            {
-                PrepareUDPStreamer();
-                _UDPaudioStreamer.StartStreaming();
-            }
-            if (!StreamAF && _UDPaudioStreamer.IsStreaming)
-            {
-                _UDPaudioStreamer.StopStreaming();
-            }
-        }
-        private void PrepareUDPStreamer()
+        private readonly RecordingIQProcessor _iqObserver = new RecordingIQProcessor();
+        private readonly RecordingAudioProcessor _AFProcessor = new RecordingAudioProcessor();
+        private readonly RecordingAudioProcessor _UDPaudioProcessor = new RecordingAudioProcessor();
+        private SimpleSatNogsWAVRecorder _AFRecorder;
+        private SimpleStreamer _UDPaudioStreamer;
+        private SimpleRecorder _basebandRecorder;
+        private readonly WavSampleFormat _wavSampleFormat = WavSampleFormat.PCM16;
+
+        private void PrepareAFRecorder()
         {
             DateTime startTime = DateTime.UtcNow;
-            _UDPaudioStreamer.SampleRate = _AFProcessor.SampleRate;
-            String AudioRecordingName = startTime.ToString(@"yyyy-MM-ddTHH-mm.ffffff") + "_" + SatelliteName + "_" + SatelliteID + "_STREAM.wav";
-            _UDPaudioStreamer.Format = _wavSampleFormat;
+            String AudioRecordingName = "";
+            _AFRecorder.SampleRate = _AFProcessor.SampleRate;
+            if ((SatelliteName == null) || (SatelliteID == null))
+            {
+                AudioRecordingName = startTime.ToString(@"yyyy-MM-ddTHH-mm-ss-ffffff") + "_CURRENT_FREQ__AF.wav";
+            }
+            else
+                AudioRecordingName = startTime.ToString(@"yyyy-MM-ddTHH-mm-ss-ffffff") + "_" + SatelliteName + "_" + SatelliteID + "_AF.wav";
+            _AFRecorder.FileName = RecordingLocation() + "\\" + AudioRecordingName;
+            _AFRecorder.Format = _wavSampleFormat;
         }
-        private void StopUDPStreamer()
+
+        private void StopAFRecorder()
         {
-            if (_UDPaudioStreamer.IsStreaming) _UDPaudioStreamer.StopStreaming();
+            if (_AFRecorder.IsRecording) _AFRecorder.StopRecording();
         }
+
+        private void PrepareBaseRecorder()
+        {
+            String BaseRecordingName;
+            DateTime startTime = DateTime.UtcNow;
+            _basebandRecorder.SampleRate = _iqObserver.SampleRate;
+            if ((SatelliteName == null) || (SatelliteID == null))
+            {
+                BaseRecordingName = startTime.ToString(@"yyyy-MM-ddTHH-mm-ss-ffffff") + "_CURRENT_FREQ__IQ.wav";
+            }
+            else
+                BaseRecordingName = startTime.ToString(@"yyyy-MM-ddTHH-mm-ss-ffffff") + "_" + SatelliteName + "_" + SatelliteID + "_IQ.wav";
+
+            _basebandRecorder.FileName = RecordingLocation() + "\\" + BaseRecordingName;
+            _basebandRecorder.Format = _wavSampleFormat;
+        }
+
+        private void StopBaseRecorder()
+        {
+            if (_basebandRecorder.IsRecording) _basebandRecorder.StopRecording();
+        }
+
     }
 
-    public enum RecordingMode
+    public unsafe class SimpleSatNogsWAVRecorder : IDisposable
     {
-        Baseband,
-        Audio
-    }
-
-    public unsafe class SimpleStreamer : IDisposable
-    {
-        const int MAX_PAYLOAD = 1472;
-        private const int DefaultAudioGain = 19;
+        private const int DefaultAudioGain = 27;
+        private const long MaxStreamLength = int.MaxValue;
         private static readonly int _bufferCount = Utils.GetIntSetting("RecordingBufferCount", 8);
         private readonly float _audioGain = (float)Math.Pow(DefaultAudioGain / 10.0, 10);
         private readonly SharpEvent _bufferEvent = new SharpEvent(false);
@@ -93,23 +113,25 @@ namespace SDRSharp.SatnogsTracker
         private int _circularBufferLength;
         private volatile int _circularBufferUsedCount;
         private long _skippedBuffersCount;
-        private bool _streamerRunning;
+        private bool _diskWriterRunning;
+        private string _fileName;
         private double _sampleRate;
         private WavSampleFormat _wavSampleFormat;
-        private Thread _streamerSender;
-        private readonly RecordingMode _recordingMode;
-        private readonly RecordingAudioProcessor _audioProcessor;
+        public WaveFileWriter TrxwaveFile = null;
+        private Thread _diskWriter;
+        private readonly RecordingMode _recordingMode;        
+        private readonly RecordingAudioProcessor _AFProcessor;
         private byte[] _outputBuffer = null;
-        public AcmStream resampleStream;
-        private UdpClient _udpClient;
-        private IPEndPoint _udpEP;
-        private int _port;
-        private DateTime LastCheck;
-        private double CurrentCounter;
 
-        public bool IsStreaming
+
+        public bool IsRecording
         {
-            get { return _streamerRunning; }
+            get { return _diskWriterRunning; }
+        }
+
+        public RecordingMode Mode
+        {
+            get { return _recordingMode; }
         }
 
         public WavSampleFormat Format
@@ -117,7 +139,7 @@ namespace SDRSharp.SatnogsTracker
             get { return _wavSampleFormat; }
             set
             {
-                if (_streamerRunning)
+                if (_diskWriterRunning)
                 {
                     throw new ArgumentException("Format cannot be set while recording");
                 }
@@ -130,7 +152,7 @@ namespace SDRSharp.SatnogsTracker
             get { return _sampleRate; }
             set
             {
-                if (_streamerRunning)
+                if (_diskWriterRunning)
                 {
                     throw new ArgumentException("SampleRate cannot be set while recording");
                 }
@@ -139,18 +161,29 @@ namespace SDRSharp.SatnogsTracker
             }
         }
 
-        #region Initialization and Termination
-
-        public SimpleStreamer(RecordingAudioProcessor audioProcessor, String Host, int Port)
+        public string FileName
         {
-            _audioProcessor = audioProcessor;
-            _recordingMode = RecordingMode.Audio;
-            _udpClient = new UdpClient();
-            _port = Port;
-            _udpEP = new IPEndPoint(IPAddress.Parse(Host), Port); 
+            get { return _fileName; }
+            set
+            {
+                if (_diskWriterRunning)
+                {
+                    throw new ArgumentException("FileName cannot be set while recording");
+                }
+                _fileName = value;
+            }
         }
 
-        ~SimpleStreamer()
+
+        #region Initialization and Termination
+
+        public SimpleSatNogsWAVRecorder(RecordingAudioProcessor audioProcessor)
+        {
+            _AFProcessor = audioProcessor;
+            _recordingMode = RecordingMode.Audio;
+        }
+
+        ~SimpleSatNogsWAVRecorder()
         {
             Dispose();
         }
@@ -161,7 +194,6 @@ namespace SDRSharp.SatnogsTracker
         }
 
         #endregion
-
 
         #region Audio Event / Scaling
 
@@ -205,26 +237,28 @@ namespace SDRSharp.SatnogsTracker
         #endregion
 
         #region Worker Thread
-       
-        private void StreamerThread()
+        public AcmStream resampleStream;
+        private void DiskWriterThread()
         {
             if (_recordingMode == RecordingMode.Audio)
             {
-                _audioProcessor.AudioReady += AudioSamplesIn;
-                _audioProcessor.Enabled = true;
+                _AFProcessor.AudioReady += AudioSamplesIn;
+                _AFProcessor.Enabled = true;
             }
             int input_rate = (int)_sampleRate;
-            resampleStream = new AcmStream(new WaveFormat(input_rate, 16, 1), new WaveFormat(48000, 16, 1));
-            CurrentCounter = 0;
-            LastCheck = DateTime.Now;
-            while (_streamerRunning)
+            
+            WaveFormat outFormat = new WaveFormat(48000, 16, 1);
+            resampleStream = new AcmStream(new WaveFormat(input_rate, 16, 1), outFormat);
+            TrxwaveFile = new WaveFileWriter(FileName, outFormat);
+
+            while (_diskWriterRunning)
             {
                 if (_circularBufferTail == _circularBufferHead)
                 {
                     _bufferEvent.WaitOne();
                 }
 
-                if (_streamerRunning && _circularBufferTail != _circularBufferHead)
+                if (_diskWriterRunning && _circularBufferTail != _circularBufferHead)
                 {
                     if (_recordingMode == RecordingMode.Audio)
                     {
@@ -233,6 +267,7 @@ namespace SDRSharp.SatnogsTracker
 
                     Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length ); 
 
+                   
                     _circularBufferUsedCount--;
                     _circularBufferTail++;
                     _circularBufferTail &= (_bufferCount - 1);
@@ -243,7 +278,7 @@ namespace SDRSharp.SatnogsTracker
             {
                 if (_floatCircularBufferPtrs[_circularBufferTail] != null)
                 {
-                    Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length);
+                    Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length );
                 }
                 _circularBufferTail++;
                 _circularBufferTail &= (_bufferCount - 1);
@@ -251,37 +286,32 @@ namespace SDRSharp.SatnogsTracker
 
             if (_recordingMode == RecordingMode.Audio)
             {
-                _audioProcessor.Enabled = false;
-                _audioProcessor.AudioReady -= AudioSamplesIn;
+                _AFProcessor.Enabled = false;
+                _AFProcessor.AudioReady -= AudioSamplesIn;
             }
-
-            _streamerRunning = false;
+            _diskWriterRunning = false;
         }
 
         public void Write(float* data, int length)
         {
-
-            if (_udpClient != null)
+            if (TrxwaveFile != null)
             {
                 switch (_wavSampleFormat)
                 {
                     case WavSampleFormat.PCM8:
-                        throw new InvalidOperationException("Not Implemented");
-
+                        Console.WriteLine("Format not imlemented");
+                        throw new InvalidOperationException("Format not imlemented");
                     case WavSampleFormat.PCM16: //This is the only supported one
                         WritePCM16(data, length);
                         break;
-
                     case WavSampleFormat.Float32:
-                        throw new InvalidOperationException("Not Implemented");
+                        Console.WriteLine("Format not imlemented");
+                        throw new InvalidOperationException("Format not imlemented");
                 }
-
                 return;
             }
-
             throw new InvalidOperationException("Stream not open");
         }
-
         private void WritePCM16(float* data, int length)
         {
             if (_outputBuffer == null || _outputBuffer.Length != (length * sizeof(Int16)))
@@ -305,59 +335,15 @@ namespace SDRSharp.SatnogsTracker
             {
                 Console.WriteLine("We didn't convert everything");
             }
-            var converted = new byte[convertedBytes];
-            System.Buffer.BlockCopy(resampleStream.DestBuffer, 0, converted, 0, convertedBytes);
-            int counter = 0;
-
-            byte[] packet = new byte[MAX_PAYLOAD];
-            var TxStream = new WaveFormat(48000, 16, 1);
-
-            for (var i = 0; i < convertedBytes; i++)
-            {
-                if (counter == MAX_PAYLOAD)
-                {
-
-                    _udpClient.Send(packet, counter, _udpEP);
-                    MarkAndWait(counter, TxStream.AverageBytesPerSecond);
-                    counter = 0;
-                }
-                packet[counter] = converted[i];
-                counter++;
-            }
-            if (counter > 0)
-            {
-                counter--;
-                _udpClient.Send(packet, counter, _udpEP);
-                MarkAndWait(counter, TxStream.AverageBytesPerSecond);
-            }
+            TrxwaveFile.Write(resampleStream.DestBuffer, 0, convertedBytes);
         }
 
-        private void MarkAndWait(int counter, int average)
+        private void Flush()
         {
-            CurrentCounter += counter;
-            DateTime Iteration = DateTime.Now;
-            TimeSpan elapsed = Iteration - LastCheck;
-            double averageMilli = average / 1000;
-            double bytesPerMiliSec = CurrentCounter / elapsed.TotalMilliseconds;
-            if (bytesPerMiliSec > averageMilli)
+            if (TrxwaveFile != null)
             {
-                Boolean WaitMore = true;
-                while (WaitMore)
-                {    
-                    elapsed = DateTime.Now - LastCheck;
-                    bytesPerMiliSec = CurrentCounter / elapsed.TotalMilliseconds;
-                    if (bytesPerMiliSec < averageMilli)
-                        WaitMore = false;
-                    else Thread.Sleep(0);
-                }
+                TrxwaveFile.Close();
             }
-            /*
-            if (elapsed.Seconds > 9)
-            {
-                LastCheck = DateTime.Now;
-                CurrentCounter = counter;
-            }
-            */
         }
 
         private void CreateBuffers(int size)
@@ -391,9 +377,9 @@ namespace SDRSharp.SatnogsTracker
 
         #region Public Methods
 
-        public void StartStreaming()
+        public void StartRecording()
         {
-            if (_streamerSender == null)
+            if (_diskWriter == null)
             {
                 _circularBufferHead = 0;
                 _circularBufferTail = 0;
@@ -402,33 +388,30 @@ namespace SDRSharp.SatnogsTracker
 
                 _bufferEvent.Reset();
 
-                _streamerSender = new Thread(StreamerThread);
+                _diskWriter = new Thread(DiskWriterThread);
 
-                _streamerRunning = true;
-                _streamerSender.Start();
+                _diskWriterRunning = true;
+                _diskWriter.Start();
             }
         }
 
-        public void StopStreaming()
+        public void StopRecording()
         {
-            _streamerRunning = false;
+            _diskWriterRunning = false;
 
-            if (_streamerSender != null)
+            if (_diskWriter != null)
             {
                 _bufferEvent.Set();
-                _streamerSender.Join();
+                _diskWriter.Join();
             }
 
-            FreeBuffers();
+            Flush();
+            FreeBuffers(); 
 
-            _streamerSender = null;
-        }
-
-        internal void UpdateIP(string NewIP)
-        {
-            _udpEP = new IPEndPoint(IPAddress.Parse(NewIP), _port);
+            _diskWriter = null;
         }
 
         #endregion
     }
 }
+

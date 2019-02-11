@@ -72,15 +72,15 @@ namespace SDRSharp.SatnogsTracker
             control_ = control;
 
             /// Setup Audio Recording
-            _audioProcessor.Enabled = false;
+            _AFProcessor.Enabled = false;
             _UDPaudioProcessor.Enabled = false;
             _iqObserver.Enabled = false;
             control_.RegisterStreamHook(_iqObserver, ProcessorType.RawIQ);
-            control_.RegisterStreamHook(_audioProcessor, ProcessorType.FilteredAudioOutput);
+            control_.RegisterStreamHook(_AFProcessor, ProcessorType.FilteredAudioOutput);
             control_.RegisterStreamHook(_UDPaudioProcessor, ProcessorType.FilteredAudioOutput);
-            Console.WriteLine(_audioProcessor.SampleRate);
-            _audioRecorder = new SimpleRecorder(_audioProcessor);
-            _AFRecorder = new SatnogsWavRecorder(_AFProcessor);
+            Console.WriteLine(_AFProcessor.SampleRate);
+            //_audioRecorder = new SimpleRecorder(_audioProcessor);
+            _AFRecorder = new SimpleSatNogsWAVRecorder(_AFProcessor);
             _UDPaudioStreamer = new SimpleStreamer(_UDPaudioProcessor,"127.0.0.1",7355);
             _basebandRecorder = new SimpleRecorder(_iqObserver);
 
@@ -197,7 +197,7 @@ namespace SDRSharp.SatnogsTracker
             CalculateSatVisibilityRunning = false;
             StopBaseRecorder();
             StopAFRecorder();
-            //StopUDPStreamer();
+            StopUDPStreamer();
             satpc32Server_?.Abort();
             LogFile.Close();
         }
@@ -221,7 +221,7 @@ namespace SDRSharp.SatnogsTracker
             {
                 SatelliteName = SatName;
                 if (_basebandRecorder.IsRecording) _basebandRecorder.StopRecording();
-                //if (_audioRecorder.IsRecording) _audioRecorder.StopRecording();
+                if (_AFRecorder.IsRecording) _AFRecorder.StopRecording();
             }
         }
         private void SDRSharp_SatIDChanged(string SatID)
@@ -277,8 +277,8 @@ namespace SDRSharp.SatnogsTracker
                 }
                 catch
                 {
-                    _basebandRecorder.StopRecording();
-                    MessageBox.Show("Unable to Start BaseBand Recording", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //MessageBox.Show("Unable to Start BaseBand Recording", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Console.WriteLine("Unable to Start BaseBand Recording");
                     return;
                 }
             }
@@ -289,7 +289,7 @@ namespace SDRSharp.SatnogsTracker
         }
         private void SDRSharp_AFRecorderChanged(Boolean RecordAF)
         {
-            if (RecordAF && !_audioRecorder.IsRecording)
+            if (RecordAF && !_AFRecorder.IsRecording)
             {
 
 
@@ -297,8 +297,8 @@ namespace SDRSharp.SatnogsTracker
                 {
                     if (RecordAF)
                     {
-                        //PrepareAFRecorder();
-                        //_audioRecorder.StartRecording();
+                        PrepareAFRecorder();
+                        _AFRecorder.StartRecording();
 
 
                     }
@@ -306,13 +306,14 @@ namespace SDRSharp.SatnogsTracker
                 catch
                 {
                     //MessageBox.Show("Unable to Start AF Recording", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Console.WriteLine("Unable to Start AF Recording");
                     return;
                 }
             }
 
-            if (!RecordAF && _audioRecorder.IsRecording)
+            if (!RecordAF && _AFRecorder.IsRecording)
             {
-                //_audioRecorder.StopRecording();
+                _AFRecorder.StopRecording();
             }
         }
         private void SDRSharp_WaterFallCustomPaint(object sender, CustomPaintEventArgs e)

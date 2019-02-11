@@ -83,7 +83,6 @@
   <ItemGroup>
     <Compile Include="Helpers.cs" />
     <Compile Include="SatellitesAndTransmitters.cs" />
-    <Compile Include="SatnogsWavRecorder.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="SatPC32DDE.cs" />
     <Compile Include="Controlpanel.cs">
@@ -100,6 +99,7 @@
     <Compile Include="Settings.Designer.cs">
       <DependentUpon>Settings.cs</DependentUpon>
     </Compile>
+    <Compile Include="SimpleSatNogsWAVRecorder.cs" />
     <Compile Include="SimpleStreamer.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -124,8 +124,8 @@
     <PostBuildEvent>md $(SolutionDir)\Binaries\
 md $(SolutionDir)\Binaries\$(ConfigurationName)
 copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\$(ConfigurationName)
-copy $(TargetDir)$(TargetFileName) C:\sdrsharp-x86
+copy $(TargetDir)$(TargetFileName) c:\sdrsharp-x86
 copy $(TargetDir)\$(TargetFileName) $(SolutionDir)\Binaries\$(ConfigurationName)
-copy $(TargetDir)\*.*  C:\sdrsharp-x86</PostBuildEvent>
+copy $(TargetDir)\*.*  c:\sdrsharp-x86</PostBuildEvent>
   </PropertyGroup>
 </Project>

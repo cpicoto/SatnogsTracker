@@ -1,3 +1,6 @@
+## 1.7
+* Major rewrite of the Audio Recorder to use NAudio and resample audio to 48Khz / Mono for all AF recordings.
+* UDP Streaming Rate adaptation at 48Khz, work in progress.
 ## 1.6.2
 * Refactored code into multiple files in preparation for new WAV recorder
 ## 1.6.1
