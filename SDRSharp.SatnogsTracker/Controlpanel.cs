@@ -37,7 +37,9 @@ namespace SDRSharp.SatnogsTracker
         public event Action SatPC32ServerStop;
         public event Action ShowSettings;
         public Action<Boolean> StartRecordingAF;
-        //public Settings dlg = new Settings();
+        public Action<Boolean> StartRecordingBaseband;
+        public Action<bool> StartStreamingAF;
+
         public Controlpanel()
         {
             InitializeComponent();
@@ -296,7 +298,18 @@ namespace SDRSharp.SatnogsTracker
         {
             if (checkBoxRecordAF.Checked) StartRecordingAF?.Invoke(true);
             else StartRecordingAF?.Invoke(false);
+        }
 
+        private void CheckBoxRecordBase_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxRecordBase.Checked) StartRecordingBaseband?.Invoke(true);
+            else StartRecordingBaseband?.Invoke(false);
+        }
+
+        private void CheckBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox2.Checked) StartStreamingAF?.Invoke(true);
+            else StartStreamingAF?.Invoke(false);
         }
     }
 }

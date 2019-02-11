@@ -1,4 +1,8 @@
-
+## 1.6.2
+* Refactored code into multiple files in preparation for new WAV recorder
+## 1.6.1
+* Avegrage Left and Right audio.
+* Added Checkbox to turn streaming on/off
 ## 1.6.0
 * UDP streaming working with gr-satellites/apps/generic_9k6_fsk_ax25.grc verified with tigrisat IQ playback
 * Added satellite-recordings folder with:

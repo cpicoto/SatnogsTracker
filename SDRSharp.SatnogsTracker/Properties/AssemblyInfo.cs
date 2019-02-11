@@ -31,7 +31,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SDRSharp.SatnogsTracker")]
-[assembly: AssemblyCopyright("Copyright © AD7NP 2019 (fork from Alexander Wahl DH2AW 2018)")]
+[assembly: AssemblyCopyright("Copyright © Carlos Picoto (AD7NP) 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -42,5 +42,5 @@ using System.Runtime.InteropServices;
 
 
 [assembly: AssemblyVersion("1.6.*")]
-[assembly: AssemblyFileVersion(version: "1.6.0")]
+[assembly: AssemblyFileVersion(version: "1.6.2")]
 

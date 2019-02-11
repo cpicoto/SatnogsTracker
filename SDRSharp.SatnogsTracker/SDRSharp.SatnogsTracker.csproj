@@ -81,6 +81,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers.cs" />
+    <Compile Include="SatellitesAndTransmitters.cs" />
+    <Compile Include="SatnogsWavRecorder.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="SatPC32DDE.cs" />
     <Compile Include="Controlpanel.cs">
@@ -97,6 +100,7 @@
     <Compile Include="Settings.Designer.cs">
       <DependentUpon>Settings.cs</DependentUpon>
     </Compile>
+    <Compile Include="SimpleStreamer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Controlpanel.resx">

@@ -73,6 +73,7 @@ namespace SDRSharp.SatnogsTracker
             this.labelGrid = new System.Windows.Forms.Label();
             this.checkBoxRecordAF = new System.Windows.Forms.CheckBox();
             this.btSettings = new System.Windows.Forms.Button();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -180,6 +181,7 @@ namespace SDRSharp.SatnogsTracker
             this.checkBoxRecordBase.Text = "Record Base";
             this.checkBoxRecordBase.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.checkBoxRecordBase.UseVisualStyleBackColor = true;
+            this.checkBoxRecordBase.CheckedChanged += new System.EventHandler(this.CheckBoxRecordBase_CheckedChanged);
             // 
             // labelName
             // 
@@ -247,7 +249,7 @@ namespace SDRSharp.SatnogsTracker
             this.labelBandwidth.Size = new System.Drawing.Size(112, 25);
             this.labelBandwidth.TabIndex = 23;
             this.labelBandwidth.Text = "Bandwidth";
-            // 
+            //
             // labelSatPC32Status
             // 
             this.labelSatPC32Status.AutoSize = true;
@@ -280,6 +282,7 @@ namespace SDRSharp.SatnogsTracker
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.checkBox2);
             this.groupBox1.Controls.Add(this.labelGrid);
             this.groupBox1.Controls.Add(this.checkBoxRecordAF);
             this.groupBox1.Location = new System.Drawing.Point(0, 44);
@@ -291,7 +294,7 @@ namespace SDRSharp.SatnogsTracker
             // labelGrid
             // 
             this.labelGrid.AutoSize = true;
-            this.labelGrid.Location = new System.Drawing.Point(160, 444);
+            this.labelGrid.Location = new System.Drawing.Point(160, 460);
             this.labelGrid.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.labelGrid.Name = "labelGrid";
             this.labelGrid.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
@@ -322,6 +325,20 @@ namespace SDRSharp.SatnogsTracker
             this.btSettings.Text = "Settings";
             this.btSettings.UseVisualStyleBackColor = true;
             this.btSettings.Click += new System.EventHandler(this.btSettings_Click);
+            // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Location = new System.Drawing.Point(51, 418);
+            this.checkBox2.Margin = new System.Windows.Forms.Padding(6);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.checkBox2.Size = new System.Drawing.Size(145, 29);
+            this.checkBox2.TabIndex = 32;
+            this.checkBox2.Text = "Stream AF";
+            this.checkBox2.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.checkBox2.UseVisualStyleBackColor = true;
+            this.checkBox2.CheckedChanged += new System.EventHandler(this.CheckBox2_CheckedChanged);
             // 
             // Controlpanel
             // 
@@ -385,5 +402,6 @@ namespace SDRSharp.SatnogsTracker
         public System.Windows.Forms.CheckBox checkBoxRecordAF;
         private System.Windows.Forms.Button btSettings;
         private System.Windows.Forms.Label labelGrid;
+        public System.Windows.Forms.CheckBox checkBox2;
     }
 }

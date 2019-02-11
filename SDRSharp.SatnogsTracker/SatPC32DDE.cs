@@ -45,7 +45,8 @@ namespace SDRSharp.SatnogsTracker
         private String _LinkTopic;
         private String _LinkItem;
         private String _DDEServerApp="SatPC32";
-
+        public event Action<bool> Connected;
+        public event Action<bool> Enabled;
         public event Action<String> SatNameChanged;
         public event Action<String> SatDownlinkFreqChanged;
         public event Action<String> SatAzimuthChanged;
@@ -129,6 +130,7 @@ namespace SDRSharp.SatnogsTracker
                 }
             }
         }
+
         public String SatNogsID
         {
             get { return _SatNogsID; }
@@ -139,6 +141,7 @@ namespace SDRSharp.SatnogsTracker
                 SatSatNogsIDChanged?.Invoke(_SatNogsID);
             }
         }
+
         public string SatName
         {
             get
@@ -156,6 +159,7 @@ namespace SDRSharp.SatnogsTracker
                 
             }
         }
+
         public string SatDownlinkFreq
         {
             get { return _SatDownlinkFreq; }
@@ -168,6 +172,7 @@ namespace SDRSharp.SatnogsTracker
                 }
             }
         }
+
         public string SatAzimuth
         {
             get { return _SatAzimuth; }
@@ -180,6 +185,7 @@ namespace SDRSharp.SatnogsTracker
                 }
             }
         }
+
         public string SatElevation
         {
             get { return _SatElevation; }
@@ -192,6 +198,7 @@ namespace SDRSharp.SatnogsTracker
                 }
             }
         }
+
         public string SatModulation
         {
             get { return _SatModulation; }
@@ -232,6 +239,7 @@ namespace SDRSharp.SatnogsTracker
                 }
             }
         }
+
         public string SatBandwidth
         {
             get { return _SatBandwidth; }
@@ -415,9 +423,5 @@ namespace SDRSharp.SatnogsTracker
         {
             Console.WriteLine("Abort DDE Client");
         }     
-
-        public event Action<bool> Connected;
-        public event Action<bool> Enabled;
-
     }
 }
