@@ -169,7 +169,7 @@ namespace SDRSharp.SatnogsTracker
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(34, 272);
+            this.label1.Location = new System.Drawing.Point(34, 269);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(120, 31);
             this.label1.TabIndex = 12;
@@ -183,7 +183,7 @@ namespace SDRSharp.SatnogsTracker
             "SatPC32",
             "WxTrack",
             "Orbitron"});
-            this.comboBox1.Location = new System.Drawing.Point(180, 264);
+            this.comboBox1.Location = new System.Drawing.Point(180, 261);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(206, 39);
             this.comboBox1.TabIndex = 13;
@@ -213,20 +213,20 @@ namespace SDRSharp.SatnogsTracker
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(49, 345);
+            this.label2.Location = new System.Drawing.Point(0, 326);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(108, 31);
+            this.label2.Size = new System.Drawing.Size(154, 31);
             this.label2.TabIndex = 16;
-            this.label2.Text = "GRC IP";
+            this.label2.Text = "gr-satellites";
             // 
             // textBox5
             // 
             this.textBox5.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox5.Location = new System.Drawing.Point(180, 338);
+            this.textBox5.Location = new System.Drawing.Point(180, 319);
             this.textBox5.Name = "textBox5";
             this.textBox5.Size = new System.Drawing.Size(206, 38);
             this.textBox5.TabIndex = 17;
-            this.textBox5.Text = "10.0.0.31";
+            this.textBox5.Text = "127.0.0.1";
             this.textBox5.TextChanged += new System.EventHandler(this.textBox5_TextChanged);
             // 
             // Settings

@@ -20,28 +20,17 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
     THE SOFTWARE. 
 */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using SDRSharp.Common;
-using NDde;
-using System.Threading;
+using SDRSharp.PanView;
 using SDRSharp.Radio;
 using SDRSharp.WavRecorder;
-using System.IO;
-using System.Net;
-using System.ComponentModel;
-using Zeptomoby.OrbitTools;
-using SDRSharp.PanView;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
-using Newtonsoft.Json;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using NAudio.Wave;
-using NAudio.Wave.Compression;
+using System.IO;
+using System.Threading;
+using System.Windows.Forms;
+using Zeptomoby.OrbitTools;
 
 namespace SDRSharp.SatnogsTracker
 {
@@ -52,14 +41,14 @@ namespace SDRSharp.SatnogsTracker
         private ISharpControl control_;
         private SatPC32DDE satpc32Server_;
         public Boolean CalculateSatVisibilityRunning;
-   
+
         private string _SatElevation;
         public Action<String> UpdateStatus;
         String MyStationFilePath = "";
         String NoradMappingFilePath = "";
 
-        List<_Transmitter>  Transmitters    = new List<_Transmitter>();
-        List<_Satellite>    Satellites      = new List<_Satellite>();
+        List<_Transmitter> Transmitters = new List<_Transmitter>();
+        List<_Satellite> Satellites = new List<_Satellite>();
 
         StreamWriter LogFile;
         Site siteHome;
@@ -81,12 +70,12 @@ namespace SDRSharp.SatnogsTracker
             Console.WriteLine(_AFProcessor.SampleRate);
             //_audioRecorder = new SimpleRecorder(_audioProcessor);
             _AFRecorder = new SimpleSatNogsWAVRecorder(_AFProcessor);
-            _UDPaudioStreamer = new SimpleStreamer(_UDPaudioProcessor,"127.0.0.1",7355);
+            _UDPaudioStreamer = new SimpleStreamer(_UDPaudioProcessor, "127.0.0.1", 7355);
             _basebandRecorder = new SimpleRecorder(_iqObserver);
 
             //Instanciate all needed objects
             _controlpanel = new Controlpanel();
-            
+
             dlg.HamSiteChanged += StationSiteChanged;
             dlg.HamSiteChanged += _controlpanel.ControlPanel_HomeSite_Changed;
 
@@ -98,7 +87,7 @@ namespace SDRSharp.SatnogsTracker
 
 
             MyStationFilePath = DataLocation() + "MyStation.json";
- 
+
             if (!File.Exists(MyStationFilePath))
             {
                 dlg.MySite = new HamSite("Your CallSign", "0.0", "0.0", "0.0", "SatPC32");
@@ -156,8 +145,14 @@ namespace SDRSharp.SatnogsTracker
 
             _controlpanel.StartRecordingAF += SDRSharp_AFRecorderChanged;
 
+            satpc32Server.SatStreamAFChanged += _controlpanel.SatPC32ServerStreamAFChanged;
+            satpc32Server.SatStreamAFChanged += SDRSharp_StreamerChanged;
+            _controlpanel.StartStreamingAF += SDRSharp_StreamerChanged;
 
-            _controlpanel.StartStreamingAF+= SDRSharp_StreamerChanged;
+            //_controlpanel.StartStreamingAF += S ;
+
+
+            //_controlpanel.StartStreamingAF+= SDRSharp_StreamerChanged;
 
             #endregion
 
@@ -208,8 +203,8 @@ namespace SDRSharp.SatnogsTracker
         }
         #endregion 
         private void SDRSharp_DownlinkFreqChanged(string Frequency)
-        {          
-            if (control_.IsPlaying)
+        {
+            if (control_.IsPlaying && control_.SourceIsTunable)
             {
                 control_.Frequency = long.Parse(Frequency);
                 control_.CenterFrequency = control_.Frequency;
@@ -277,7 +272,6 @@ namespace SDRSharp.SatnogsTracker
                 }
                 catch
                 {
-                    //MessageBox.Show("Unable to Start BaseBand Recording", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Console.WriteLine("Unable to Start BaseBand Recording");
                     return;
                 }
@@ -299,13 +293,10 @@ namespace SDRSharp.SatnogsTracker
                     {
                         PrepareAFRecorder();
                         _AFRecorder.StartRecording();
-
-
                     }
                 }
                 catch
                 {
-                    //MessageBox.Show("Unable to Start AF Recording", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Console.WriteLine("Unable to Start AF Recording");
                     return;
                 }
@@ -365,12 +356,12 @@ namespace SDRSharp.SatnogsTracker
                     {
                         if (t.InSpectrum(MinFreq, MaxFreq))
                         {
-                            int Height = (int)(t.CurrentEL * (Spectrum.Height-30) / 90);
-                            int MaxHeight = (int)(sat.NextMaxEl * (Spectrum.Height-30) / 90);
+                            int Height = (int)(t.CurrentEL * (Spectrum.Height - 30) / 90);
+                            int MaxHeight = (int)(sat.NextMaxEl * (Spectrum.Height - 30) / 90);
                             Start = new Point((int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) - t.BandwidthHz / 2),
-                                               Spectrum.Height - Height-30);
+                                               Spectrum.Height - Height - 30);
                             Top = new Point((int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) - t.BandwidthHz / 2),
-                                               Spectrum.Height - MaxHeight-30);
+                                               Spectrum.Height - MaxHeight - 30);
                             int Width = (int)Spectrum.FrequencyToPoint(double.Parse(t.DownlinkFreqWithDoppler) + t.BandwidthHz / 2) - Start.X;
                             Output_Rectangle = new Rectangle(Start, new Size(Width, Height));
                             myBrush = new SolidBrush(Color.Red);
@@ -389,8 +380,6 @@ namespace SDRSharp.SatnogsTracker
             e.CustomTitle = "";
             int Span = Spectrum.DisplayedBandwidth;
             int SpectrumWidth = Spectrum.SpectrumWidth;
-            //Spectrum.StatusText = ((Spectrum.CenterFrequency - Spectrum.DisplayedBandwidth / 2)).ToString() + "--" +
-            //   ((Spectrum.CenterFrequency + Spectrum.DisplayedBandwidth / 2));
             Spectrum.StatusText = "";
             float MinFreq = Spectrum.CenterFrequency - Spectrum.DisplayedBandwidth / 2;
             float MaxFreq = Spectrum.CenterFrequency + Spectrum.DisplayedBandwidth / 2;

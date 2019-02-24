@@ -20,28 +20,13 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
     THE SOFTWARE. 
 */
+using NAudio.Wave;
+using NAudio.Wave.Compression;
+using SDRSharp.Common;
 using SDRSharp.Radio;
 using SDRSharp.WavRecorder;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using SDRSharp.Common;
-using NDde;
-using System.ComponentModel;
-using Zeptomoby.OrbitTools;
-using SDRSharp.PanView;
-using System.Drawing;
-using Newtonsoft.Json;
-using System.Runtime.InteropServices;
-using NAudio.Wave;
-using NAudio.Wave.Compression;
 
 namespace SDRSharp.SatnogsTracker
 {
@@ -119,7 +104,7 @@ namespace SDRSharp.SatnogsTracker
         private WavSampleFormat _wavSampleFormat;
         public WaveFileWriter TrxwaveFile = null;
         private Thread _diskWriter;
-        private readonly RecordingMode _recordingMode;        
+        private readonly RecordingMode _recordingMode;
         private readonly RecordingAudioProcessor _AFProcessor;
         private byte[] _outputBuffer = null;
 
@@ -246,7 +231,7 @@ namespace SDRSharp.SatnogsTracker
                 _AFProcessor.Enabled = true;
             }
             int input_rate = (int)_sampleRate;
-            
+
             WaveFormat outFormat = new WaveFormat(48000, 16, 1);
             resampleStream = new AcmStream(new WaveFormat(input_rate, 16, 1), outFormat);
             TrxwaveFile = new WaveFileWriter(FileName, outFormat);
@@ -265,9 +250,9 @@ namespace SDRSharp.SatnogsTracker
                         ScaleAudio(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length * 2);
                     }
 
-                    Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length ); 
+                    Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length);
 
-                   
+
                     _circularBufferUsedCount--;
                     _circularBufferTail++;
                     _circularBufferTail &= (_bufferCount - 1);
@@ -278,7 +263,7 @@ namespace SDRSharp.SatnogsTracker
             {
                 if (_floatCircularBufferPtrs[_circularBufferTail] != null)
                 {
-                    Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length );
+                    Write(_floatCircularBufferPtrs[_circularBufferTail], _circularBuffers[_circularBufferTail].Length);
                 }
                 _circularBufferTail++;
                 _circularBufferTail &= (_bufferCount - 1);
@@ -406,7 +391,7 @@ namespace SDRSharp.SatnogsTracker
             }
 
             Flush();
-            FreeBuffers(); 
+            FreeBuffers();
 
             _diskWriter = null;
         }

@@ -21,15 +21,11 @@
     THE SOFTWARE. 
 */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace SDRSharp.SatnogsTracker
 {
-    class SatPC32DDE:IDisposable
+    class SatPC32DDE : IDisposable
     {
         private readonly NDde.Client.DdeClient ddeclient_;
         private String _SatName;
@@ -44,7 +40,8 @@ namespace SDRSharp.SatnogsTracker
         private String _ApplicationName;
         private String _LinkTopic;
         private String _LinkItem;
-        private String _DDEServerApp="SatPC32";
+        private String _DDEServerApp = "SatPC32";
+
         public event Action<bool> Connected;
         public event Action<bool> Enabled;
         public event Action<String> SatNameChanged;
@@ -55,6 +52,7 @@ namespace SDRSharp.SatnogsTracker
         public event Action<String> SatBandwidthChanged;
         public event Action<Boolean> SatRecordBaseChanged;
         public event Action<Boolean> SatRecordAFChanged;
+        public event Action<Boolean> SatStreamAFChanged;
         public event Action<String> SatSatNogsIDChanged;
 
         protected virtual void Dispose(bool disposing)
@@ -114,7 +112,7 @@ namespace SDRSharp.SatnogsTracker
                 {
                     _SatRecordBase = value;
                     SatRecordBaseChanged?.Invoke(_SatRecordBase);
-                }                
+                }
             }
         }
 
@@ -150,13 +148,13 @@ namespace SDRSharp.SatnogsTracker
             }
             set
             {
-                
+
                 if (_SatName != value)
                 {
                     _SatName = value;
                     SatNameChanged?.Invoke(_SatName);
                 }
-                
+
             }
         }
 
@@ -208,9 +206,9 @@ namespace SDRSharp.SatnogsTracker
                 {
                     _SatModulation = value;
                     SatModulationChanged?.Invoke(_SatModulation);
-                    if (_ApplicationName=="Orbitron")
+                    if (_ApplicationName == "Orbitron")
                     {
-                        switch(value)
+                        switch (value)
                         {
                             case "FM":
                                 SatBandwidth = "6250";
@@ -257,6 +255,23 @@ namespace SDRSharp.SatnogsTracker
             }
         }
 
+        private Boolean _SatStreamAF;
+        public bool SatStreamAF
+        {
+            get
+            {
+                return _SatStreamAF;
+            }
+            set
+            {
+                if (_SatStreamAF != value)
+                {
+                    _SatStreamAF = value;
+                    SatStreamAFChanged?.Invoke(_SatStreamAF);
+                }
+            }
+        }
+
         //Constructor
         public SatPC32DDE(String DDEApp)
         {
@@ -290,7 +305,7 @@ namespace SDRSharp.SatnogsTracker
             {
                 Thread.Sleep(3000);
                 try { ddeclient_.Connect(); }
-                catch 
+                catch
                 {
                     Console.WriteLine("Failed to Connect to DDE Server, waiting...");
                 }
@@ -303,6 +318,7 @@ namespace SDRSharp.SatnogsTracker
             string[] words = Input.Split(' ');
             String SatMA;
             Boolean _recording = false;
+            Boolean _streaming = false;
             foreach (string word in words)
             {
                 if (word.StartsWith("SN"))
@@ -353,6 +369,16 @@ namespace SDRSharp.SatnogsTracker
                     else
                         SatRecordAF = false;
                 }
+                else if (word.StartsWith("RS"))
+                {
+                    if (word.Substring(2, word.Length - 2).ToLower().StartsWith("yes"))
+                    {
+                        SatStreamAF = true;
+                        _streaming = true;
+                    }
+                    else
+                        SatStreamAF = false;
+                }
                 else if (word.StartsWith("MA"))
                 {
                     SatMA = word.Remove(0, 2);
@@ -361,6 +387,7 @@ namespace SDRSharp.SatnogsTracker
                         SatRecordAF = false;
                         SatRecordBase = false;
                     }
+                    if (!_streaming) SatStreamAF = false;
 
                 }
                 else if (word.StartsWith("** NO SATELLITE **"))
@@ -371,8 +398,6 @@ namespace SDRSharp.SatnogsTracker
                     SatElevation = "0.0";
                     SatModulation = "FM";
                     SatBandwidth = "435.000";
-                    //SatUplinkMode = "FM";
-                    //CheckSatAction(SatName);
                 }
             }
         }
@@ -386,7 +411,8 @@ namespace SDRSharp.SatnogsTracker
                 {
                     ddeclient_.StartAdvise(_LinkItem, 1, true, 60000);
                 }
-                else {
+                else
+                {
                     try
                     {
                         ddeclient_.Connect();
@@ -401,7 +427,7 @@ namespace SDRSharp.SatnogsTracker
                     }
                 }
                 Enabled.Invoke(true);
-                
+
             }
             catch (Exception e)
             {
@@ -411,10 +437,6 @@ namespace SDRSharp.SatnogsTracker
 
         public void Stop()
         {
-            /*
-            if (ddeclient_.IsConnected)
-                ddeclient_.StopAdvise(_LinkItem, 60000);
-                */
             Enabled.Invoke(false);
             Connected?.Invoke(false);
         }
@@ -422,6 +444,6 @@ namespace SDRSharp.SatnogsTracker
         public void Abort()
         {
             Console.WriteLine("Abort DDE Client");
-        }     
+        }
     }
 }

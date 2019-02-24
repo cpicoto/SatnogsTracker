@@ -20,28 +20,15 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
     THE SOFTWARE. 
 */
+using Newtonsoft.Json;
+using SDRSharp.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Zeptomoby.OrbitTools;
-using System.Windows.Forms;
-using SDRSharp.Common;
-using NDde;
-using System.Threading;
-using SDRSharp.Radio;
-using SDRSharp.WavRecorder;
 using System.IO;
 using System.Net;
-using SDRSharp.PanView;
-using System.Drawing;
-using Newtonsoft.Json;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using NAudio.Wave;
-using NAudio.Wave.Compression;
+using System.Threading;
+using Zeptomoby.OrbitTools;
 
 namespace SDRSharp.SatnogsTracker
 {
@@ -1379,7 +1366,7 @@ namespace SDRSharp.SatnogsTracker
             Longitude = inLongitude;
             Altitude = inAltitude;
             DDEApp = inDDEApp;
-            GRIP = "127.0.0.1";     
+            GRIP = "127.0.0.1";
         }
         public String Callsign { get; set; }
         public String Latitude { get; set; }

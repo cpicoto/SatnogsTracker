@@ -1,3 +1,20 @@
+## 1.7.2
+* Cleanup code
+* Fixed Reccordings
+## 1.7.1
+* DDE String parses the following fields from tracking software
+	SN<Satellite Name>
+	AZ<Azimuth>
+	EL<Elevation>
+	UP<Uplink Frequency(Not Used)>
+	UM<Uplink Mode(Not Used)>
+	DN<Downlink Frequency in Hz>
+	DM<Downlink Mode>
+	BW<Filter Bandwidth in Hz>
+	ID<Satnogs ID>
+	RB<yes|no> Record IQ
+	RA<yes|no> Record AF
+	RS<yes|no> Stream AF
 ## 1.7
 * Major rewrite of the Audio Recorder to use NAudio and resample audio to 48Khz / Mono for all AF recordings.
 * UDP Streaming Rate adaptation at 48Khz, work in progress.

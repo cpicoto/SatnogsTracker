@@ -21,14 +21,12 @@
     THE SOFTWARE. 
 */
 using System;
-using System.Windows.Forms;
 using System.Diagnostics;
-
-using SDRSharp.Common;
+using System.Windows.Forms;
 
 namespace SDRSharp.SatnogsTracker
 {
-    
+
     public partial class Controlpanel : UserControl
     {
         private bool enabled_ = false;
@@ -38,7 +36,7 @@ namespace SDRSharp.SatnogsTracker
         public event Action ShowSettings;
         public Action<Boolean> StartRecordingAF;
         public Action<Boolean> StartRecordingBaseband;
-        public Action<bool> StartStreamingAF;
+        public Action<Boolean> StartStreamingAF;
 
         public Controlpanel()
         {
@@ -46,7 +44,7 @@ namespace SDRSharp.SatnogsTracker
             this.checkBoxEnable.CheckedChanged += CheckBoxEnable_CheckedChanged;
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-            this.labelVersion.Text = "v"+fvi.FileMajorPart+"."+fvi.FileMinorPart;
+            this.labelVersion.Text = "v" + fvi.FileMajorPart + "." + fvi.FileMinorPart + "." + fvi.FileBuildPart;
         }
 
         public void SatPC32ServerReceivedFrequencyInHzChanged(String frequency_in_hz)
@@ -66,7 +64,7 @@ namespace SDRSharp.SatnogsTracker
         {
             if (InvokeRequired)
             {
-                this.Invoke(new Action<String>(SatPC32ServerNameChanged), new object[] { SatName});
+                this.Invoke(new Action<String>(SatPC32ServerNameChanged), new object[] { SatName });
                 return;
             }
             else
@@ -176,8 +174,21 @@ namespace SDRSharp.SatnogsTracker
             else
             {
                 this.checkBoxRecordAF.Checked = RecordAF;
- 
 
+
+            }
+        }
+
+        public void SatPC32ServerStreamAFChanged(Boolean StreamAF)
+        {
+            if (InvokeRequired)
+            {
+                this.Invoke(new Action<Boolean>(SatPC32ServerStreamAFChanged), new object[] { StreamAF });
+                return;
+            }
+            else
+            {
+                this.checkBoxStreamAF.Checked = StreamAF;
             }
         }
         public void SatPC32ServerSatNogsIDChanged(String SatNogsID)
@@ -227,12 +238,12 @@ namespace SDRSharp.SatnogsTracker
         {
             if (InvokeRequired)
             {
-                this.Invoke(new Action<HamSite>(ControlPanel_HomeSite_Changed), new object[] { site});
+                this.Invoke(new Action<HamSite>(ControlPanel_HomeSite_Changed), new object[] { site });
                 return;
             }
             else
             {
-                this.labelGrid.Text=LatLonToGridSquare(double.Parse(site.Latitude), double.Parse(site.Longitude));
+                this.labelGrid.Text = LatLonToGridSquare(double.Parse(site.Latitude), double.Parse(site.Longitude));
                 this.labelDescSatPC32.Text = site.DDEApp;
                 //this.labelGrid.Text = "Grid:"+site.Latitude+"/"+site.Longitude;
             }
@@ -273,13 +284,14 @@ namespace SDRSharp.SatnogsTracker
             {
                 if (checkbox.Checked)
                 {
-                    enabled_=true;
+                    enabled_ = true;
                     Console.WriteLine("Checkbox Changed");
-                    SatPC32ServerStart?.Invoke();   
-                } else
+                    SatPC32ServerStart?.Invoke();
+                }
+                else
                 {
                     enabled_ = false;
-                    SatPC32ServerStop?.Invoke();     
+                    SatPC32ServerStop?.Invoke();
                 }
             }
         }
@@ -308,7 +320,7 @@ namespace SDRSharp.SatnogsTracker
 
         private void CheckBox2_CheckedChanged(object sender, EventArgs e)
         {
-            if (checkBox2.Checked) StartStreamingAF?.Invoke(true);
+            if (checkBoxStreamAF.Checked) StartStreamingAF?.Invoke(true);
             else StartStreamingAF?.Invoke(false);
         }
     }

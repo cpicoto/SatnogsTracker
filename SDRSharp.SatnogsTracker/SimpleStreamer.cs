@@ -81,7 +81,7 @@ namespace SDRSharp.SatnogsTracker
     public unsafe class SimpleStreamer : IDisposable
     {
         const int MAX_PAYLOAD = 1472;
-        private const int DefaultAudioGain = 19;
+        private const int DefaultAudioGain = 27;
         private static readonly int _bufferCount = Utils.GetIntSetting("RecordingBufferCount", 8);
         private readonly float _audioGain = (float)Math.Pow(DefaultAudioGain / 10.0, 10);
         private readonly SharpEvent _bufferEvent = new SharpEvent(false);
@@ -314,6 +314,7 @@ namespace SDRSharp.SatnogsTracker
 
             for (var i = 0; i < convertedBytes; i++)
             {
+                //System.Buffer.BlockCopy(resampleStream.DestBuffer, counter, 0, MAX_PAYLOAD);
                 if (counter == MAX_PAYLOAD)
                 {
 
@@ -352,10 +353,10 @@ namespace SDRSharp.SatnogsTracker
                 }
             }
             /*
-            if (elapsed.Seconds > 9)
+            if (elapsed.Minutes > 5)
             {
                 LastCheck = DateTime.Now;
-                CurrentCounter = counter;
+                CurrentCounter = 0;
             }
             */
         }
