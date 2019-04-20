@@ -204,11 +204,17 @@ namespace SDRSharp.SatnogsTracker
         #endregion 
         private void SDRSharp_DownlinkFreqChanged(string Frequency)
         {
+            
             if (control_.IsPlaying && control_.SourceIsTunable)
             {
-                control_.Frequency = long.Parse(Frequency);
-                control_.CenterFrequency = control_.Frequency;
+                    control_.Frequency = long.Parse(Frequency);
+                    control_.CenterFrequency = control_.Frequency;
             }
+            else if (control_.IsPlaying)
+            {
+                //IQ Source used for IC-9700
+                control_.Frequency = (long)11939;
+            }               
         }
         private void SDRSharp_SatNameChanged(string SatName)
         {

@@ -1,3 +1,5 @@
+## 1.7.3
+* Support IC-9700 IF Input tune
 ## 1.7.2
 * Cleanup code
 * Fixed Reccordings
