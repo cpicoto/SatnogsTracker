@@ -212,8 +212,26 @@ namespace SDRSharp.SatnogsTracker
             }
             else if (control_.IsPlaying)
             {
-                //IQ Source used for IC-9700
-                control_.Frequency = (long)11939;
+                switch (control_.DetectorType)
+                {
+                    //IQ Source used for IC-9700
+                    case DetectorType.AM:
+                    case DetectorType.NFM:
+                    case DetectorType.CW:
+                        control_.Frequency = (long)11939;
+                        break;
+                    case DetectorType.USB:
+                        control_.Frequency = (long)11939 - control_.FilterBandwidth/2;
+                        break;
+                    case DetectorType.LSB:
+                        control_.Frequency = (long)-11939 + control_.FilterBandwidth/2;
+                        break;
+                    default:
+                        control_.Frequency = (long)11939;
+                        break;
+                }
+                
+                
             }               
         }
         private void SDRSharp_SatNameChanged(string SatName)
